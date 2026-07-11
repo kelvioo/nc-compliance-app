@@ -234,8 +234,8 @@ function Sidebar({ view, setView, company, onLogout }) {
       width: 200, background: "#0F1216", borderRight: "1px solid #2E3742",
       padding: "20px 14px", display: "flex", flexDirection: "column", gap: 4,
       fontFamily: "IBM Plex Sans, sans-serif",
-    }}>
-      <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "0 6px 20px" }}>
+    }} className="nc-sidebar">
+      <div className="nc-sidebar-header" style={{ display: "flex", alignItems: "center", gap: 8, padding: "0 6px 20px" }}>
         <Building2 size={18} color="#E6A23C" />
         <div style={{ fontSize: 13, color: "#EDEFF2", fontWeight: 600, lineHeight: 1.3 }}>
           {company.name}
@@ -245,7 +245,7 @@ function Sidebar({ view, setView, company, onLogout }) {
         const Icon = it.icon;
         const active = view === it.id;
         return (
-          <button key={it.id} onClick={() => setView(it.id)} style={{
+          <button key={it.id} onClick={() => setView(it.id)} className="nc-sidebar-nav-item" style={{
             display: "flex", alignItems: "center", gap: 10, padding: "10px 12px",
             borderRadius: 6, border: "none", cursor: "pointer", textAlign: "left",
             background: active ? "#1A2028" : "transparent",
@@ -258,8 +258,8 @@ function Sidebar({ view, setView, company, onLogout }) {
           </button>
         );
       })}
-      <div style={{ flex: 1 }} />
-      <button onClick={onLogout} style={{
+      <div className="nc-sidebar-spacer" style={{ flex: 1 }} />
+      <button onClick={onLogout} className="nc-sidebar-logout" style={{
         display: "flex", alignItems: "center", gap: 10, padding: "10px 12px",
         borderRadius: 6, border: "none", background: "transparent", color: "#5B6470",
         cursor: "pointer", fontSize: 13, fontFamily: "IBM Plex Sans, sans-serif",
@@ -290,7 +290,7 @@ function Dashboard({ data, setData }) {
   };
 
   return (
-    <div style={{ padding: 28, fontFamily: "IBM Plex Sans, sans-serif" }}>
+    <div style={{ padding: 28, fontFamily: "IBM Plex Sans, sans-serif" }} className="nc-main-content">
       <h1 style={{ fontFamily: "Oswald, sans-serif", textTransform: "uppercase", letterSpacing: 1,
         fontSize: 20, color: "#EDEFF2", margin: "0 0 4px" }}>Compliance dashboard</h1>
       <p style={{ color: "#8D97A3", fontSize: 13, margin: "0 0 24px" }}>
@@ -377,11 +377,11 @@ function EntriesView({ data, setData }) {
   };
 
   return (
-    <div style={{ padding: 28, fontFamily: "IBM Plex Sans, sans-serif" }}>
+    <div style={{ padding: 28, fontFamily: "IBM Plex Sans, sans-serif" }} className="nc-main-content">
       <h1 style={{ fontFamily: "Oswald, sans-serif", textTransform: "uppercase", letterSpacing: 1,
         fontSize: 20, color: "#EDEFF2", margin: "0 0 20px" }}>Spend log</h1>
 
-      <form onSubmit={addEntry} style={{
+      <form onSubmit={addEntry} className="nc-form-grid" style={{
         display: "grid", gridTemplateColumns: "120px 1fr 1fr", gap: 10,
         background: "#1A2028", border: "1px solid #2E3742",
         borderRadius: 10, padding: 16, marginBottom: 22, rowGap: 12,
@@ -489,7 +489,7 @@ function QuotaView({ data, setData }) {
   };
 
   return (
-    <div style={{ padding: 28, fontFamily: "IBM Plex Sans, sans-serif" }}>
+    <div style={{ padding: 28, fontFamily: "IBM Plex Sans, sans-serif" }} className="nc-main-content">
       <h1 style={{ fontFamily: "Oswald, sans-serif", textTransform: "uppercase", letterSpacing: 1,
         fontSize: 20, color: "#EDEFF2", margin: "0 0 4px" }}>Expatriate quota tracker</h1>
       <p style={{ color: "#8D97A3", fontSize: 13, margin: "0 0 20px" }}>
@@ -577,7 +577,7 @@ function ReportView({ data }) {
   const today = new Date().toLocaleDateString("en-NG", { year: "numeric", month: "long", day: "numeric" });
 
   return (
-    <div style={{ padding: 28, fontFamily: "IBM Plex Sans, sans-serif" }}>
+    <div style={{ padding: 28, fontFamily: "IBM Plex Sans, sans-serif" }} className="nc-main-content">
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12, flexWrap: "wrap", gap: 10 }}>
         <h1 style={{ fontFamily: "Oswald, sans-serif", textTransform: "uppercase", letterSpacing: 1,
           fontSize: 20, color: "#EDEFF2", margin: 0 }}>Compliance report</h1>
@@ -706,12 +706,34 @@ export default function App() {
   return (
     <>
       <FontLoader />
-      <style>{`@media print { .no-print { display: none !important; } }`}</style>
-      <div style={{ display: "flex", minHeight: 560, background: "#12161B", borderRadius: 10, overflow: "hidden" }}>
+      <style>{`
+        @media print { .no-print { display: none !important; } }
+        @media (max-width: 720px) {
+          .nc-layout { flex-direction: column !important; }
+          .nc-sidebar {
+            width: 100% !important;
+            flex-direction: row !important;
+            overflow-x: auto !important;
+            padding: 10px 8px !important;
+            align-items: center !important;
+            gap: 6px !important;
+          }
+          .nc-sidebar-header { padding: 0 8px 0 0 !important; flex-shrink: 0; }
+          .nc-sidebar-nav-item {
+            flex-shrink: 0;
+            white-space: nowrap;
+          }
+          .nc-sidebar-spacer { display: none !important; }
+          .nc-sidebar-logout { flex-shrink: 0; }
+          .nc-main-content { padding: 16px !important; }
+          .nc-form-grid { grid-template-columns: 1fr !important; }
+        }
+      `}</style>
+      <div style={{ display: "flex", minHeight: 560, background: "#12161B", borderRadius: 10, overflow: "hidden" }} className="nc-layout">
         <div className="no-print">
           <Sidebar view={view} setView={setView} company={data} onLogout={() => setCompanyId(null)} />
         </div>
-        <div style={{ flex: 1, overflow: "auto" }}>
+        <div style={{ flex: 1, overflow: "auto" }} className="nc-main-content-wrap">
           {view === "dashboard" && <Dashboard data={data} setData={setData} />}
           {view === "entries" && <EntriesView data={data} setData={setData} />}
           {view === "quota" && <QuotaView data={data} setData={setData} />}
