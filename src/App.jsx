@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from "react";
 import {
   Gauge, Plus, FileText, Users, LogOut, Building2, TrendingUp,
-  Trash2, ChevronRight, ClipboardList, ShieldCheck, X, Loader2
+  Trash2, ChevronRight, ClipboardList, ShieldCheck, X, Loader2, Leaf
 } from "lucide-react";
 
 const CATS = [
@@ -11,6 +11,17 @@ const CATS = [
   { id: "importEquip", label: "Imported equipment", group: "foreign" },
   { id: "localServices", label: "Local services", group: "local" },
   { id: "foreignServices", label: "Foreign services", group: "foreign" },
+];
+
+// Indicative CO2e emission factors, kg CO2e per unit consumed.
+// Sources: typical IPCC / industry default factors. These are estimates for
+// internal tracking only and should be validated against NUPRC/NCDMB or a
+// certified carbon accounting methodology before external reporting.
+const FUEL_TYPES = [
+  { id: "diesel", label: "Diesel (generators, vehicles)", unit: "litres", factor: 2.68 },
+  { id: "petrol", label: "Petrol / PMS", unit: "litres", factor: 2.31 },
+  { id: "gasFlared", label: "Gas flared", unit: "scf", factor: 0.0549 },
+  { id: "electricity", label: "Grid electricity", unit: "kWh", factor: 0.40 },
 ];
 
 const fmtNaira = (n) =>
@@ -79,7 +90,7 @@ function Gauge_({ pct, target }) {
   const angle = (clamped / 100) * 180;
   const targetAngle = (Math.max(0, Math.min(100, target)) / 100) * 180;
   const r = 90;
-  const cx = 110, cy = 110;
+  const cx = 130, cy = 120;
   const toXY = (deg) => {
     const rad = (Math.PI / 180) * (180 - deg);
     return [cx - r * Math.cos(rad), cy - r * Math.sin(rad)];
@@ -96,17 +107,19 @@ function Gauge_({ pct, target }) {
   };
 
   return (
-    <svg viewBox="0 0 220 130" style={{ width: "100%", maxWidth: 260 }}>
-      <path d={arcPath(0, 180, r)} fill="none" stroke="#2E3742" strokeWidth="14" strokeLinecap="round" />
-      <path d={arcPath(0, angle, r)} fill="none" stroke={status} strokeWidth="14" strokeLinecap="round" />
+    <svg viewBox="0 0 260 170" width="260" height="170" style={{ display: "block", margin: "0 auto" }}>
+      <path d={arcPath(0, 180, r)} fill="none" stroke="#3A4552" strokeWidth="16" strokeLinecap="round" />
+      {clamped > 0 && (
+        <path d={arcPath(0, angle, r)} fill="none" stroke={status} strokeWidth="16" strokeLinecap="round" />
+      )}
       <line x1={tx} y1={ty} x2={cx + (tx - cx) * 0.72} y2={cy + (ty - cy) * 0.72}
         stroke="#EDEFF2" strokeWidth="3" strokeLinecap="round" />
       <circle cx={cx} cy={cy} r="4" fill="#EDEFF2" />
       <line x1={cx} y1={cy} x2={nx} y2={ny} stroke="#EDEFF2" strokeWidth="3" strokeLinecap="round" />
-      <text x={cx} y={cy + 34} textAnchor="middle" fontFamily="IBM Plex Mono, monospace"
-        fontSize="26" fontWeight="600" fill="#EDEFF2">{clamped.toFixed(1)}%</text>
-      <text x={cx} y={cy + 52} textAnchor="middle" fontFamily="IBM Plex Sans, sans-serif"
-        fontSize="10" letterSpacing="1.5" fill="#8D97A3">NIGERIAN CONTENT</text>
+      <text x={cx} y={cy + 38} textAnchor="middle" fontFamily="IBM Plex Mono, monospace"
+        fontSize="28" fontWeight="700" fill="#FFFFFF">{clamped.toFixed(1)}%</text>
+      <text x={cx} y={cy + 58} textAnchor="middle" fontFamily="IBM Plex Sans, sans-serif"
+        fontSize="11" letterSpacing="1.5" fill="#A6AFB9">NIGERIAN CONTENT</text>
     </svg>
   );
 }
@@ -172,7 +185,8 @@ function LoginScreen({ onEnter }) {
         onEnter(id);
       } else {
         const fresh = {
-          name: name.trim(), pin, target: 70, entries: [], expatPositions: [],
+          name: name.trim(), pin, target: 70, entries: [], expatPositions: [], carbonEntries: [],
+          exchangeRate: 1600,
           createdAt: new Date().toISOString(),
         };
         await window.storage.set(`company:${id}`, JSON.stringify(fresh));
@@ -195,7 +209,7 @@ function LoginScreen({ onEnter }) {
           <div>
             <div style={{ fontFamily: "Oswald, sans-serif", textTransform: "uppercase",
               letterSpacing: 1.5, fontSize: 15, color: "#EDEFF2" }}>NC Compliance</div>
-            <div style={{ fontSize: 12, color: "#8D97A3" }}>Nigerian Content tracker</div>
+            <div style={{ fontSize: 12, color: "#8D97A3" }}>Nigerian Content report</div>
           </div>
         </div>
         <form onSubmit={submit} style={{ display: "flex", flexDirection: "column", gap: 14 }}>
@@ -227,6 +241,7 @@ function Sidebar({ view, setView, company, onLogout }) {
     { id: "dashboard", label: "Dashboard", icon: Gauge },
     { id: "entries", label: "Spend log", icon: ClipboardList },
     { id: "quota", label: "Expat quota", icon: Users },
+    { id: "carbon", label: "Carbon intensity", icon: Leaf },
     { id: "report", label: "Report", icon: FileText },
   ];
   return (
@@ -281,12 +296,55 @@ function calcTotals(entries) {
   return { totals, local, foreign, total, pct };
 }
 
+// Groups entries by month and fits a simple linear trend across monthly NC%
+// to project the position roughly one quarter (3 months) ahead. This is a
+// lightweight indicative forecast based on your own logged data, not a
+// certified projection.
+function calcForecast(entries) {
+  if (!entries || entries.length === 0) return null;
+  const byMonth = {};
+  entries.forEach((e) => {
+    if (!e.date) return;
+    const key = e.date.slice(0, 7); // YYYY-MM
+    if (!byMonth[key]) byMonth[key] = [];
+    byMonth[key].push(e);
+  });
+  const months = Object.keys(byMonth).sort();
+  if (months.length < 2) return null;
+
+  const points = months.map((m, i) => {
+    const { pct } = calcTotals(byMonth[m]);
+    return { i, pct };
+  });
+
+  const n = points.length;
+  const sumX = points.reduce((s, p) => s + p.i, 0);
+  const sumY = points.reduce((s, p) => s + p.pct, 0);
+  const sumXY = points.reduce((s, p) => s + p.i * p.pct, 0);
+  const sumXX = points.reduce((s, p) => s + p.i * p.i, 0);
+  const denom = n * sumXX - sumX * sumX;
+  if (denom === 0) return null;
+  const slope = (n * sumXY - sumX * sumY) / denom;
+  const intercept = (sumY - slope * sumX) / n;
+  const projected = intercept + slope * (n + 2); // ~3 months ahead
+  return {
+    monthsTracked: n,
+    trendPerMonth: slope,
+    projectedPct: Math.max(0, Math.min(100, projected)),
+  };
+}
+
 function Dashboard({ data, setData }) {
   const { totals, local, foreign, total, pct } = calcTotals(data.entries);
+  const forecast = calcForecast(data.entries);
   const [target, setTarget] = useState(data.target || 70);
+  const [rate, setRate] = useState(data.exchangeRate || 1600);
 
   const saveTarget = async () => {
     await setData({ ...data, target: Number(target) });
+  };
+  const saveRate = async () => {
+    await setData({ ...data, exchangeRate: Number(rate) || 1600 });
   };
 
   return (
@@ -308,6 +366,12 @@ function Dashboard({ data, setData }) {
               style={{ ...inputStyle, width: 56, padding: "5px 8px", textAlign: "center" }} />
             <span style={{ fontSize: 12, color: "#8D97A3" }}>%</span>
           </div>
+          <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 10 }}>
+            <span style={{ fontSize: 11, color: "#5B6470" }}>₦/$1</span>
+            <input type="number" value={rate} min={1}
+              onChange={(e) => setRate(e.target.value)} onBlur={saveRate}
+              style={{ ...inputStyle, width: 80, padding: "5px 8px", textAlign: "center", fontSize: 12 }} />
+          </div>
         </div>
 
         <div style={{ display: "flex", flexDirection: "column", gap: 12, flex: 1, minWidth: 260 }}>
@@ -316,6 +380,23 @@ function Dashboard({ data, setData }) {
             <StatCard label="Foreign spend" value={fmtNaira(foreign)} accent="#D9534F" />
             <StatCard label="Total tracked" value={fmtNaira(total)} accent="#7FC4D6" />
           </div>
+          {forecast && (
+            <div style={{ background: "#1A2028", border: "1px solid #2E3742", borderRadius: 10, padding: 16 }}>
+              <div style={{ fontSize: 12, color: "#8D97A3", marginBottom: 6, letterSpacing: 0.5 }}>
+                PROJECTED NC% (NEXT QUARTER)
+              </div>
+              <div style={{ display: "flex", alignItems: "baseline", gap: 10 }}>
+                <span style={{ fontFamily: "IBM Plex Mono, monospace", fontSize: 22, fontWeight: 700,
+                  color: forecast.projectedPct >= target ? "#4FAE7E" : "#D9534F" }}>
+                  {forecast.projectedPct.toFixed(1)}%
+                </span>
+                <span style={{ fontSize: 11, color: "#5B6470" }}>
+                  based on {forecast.monthsTracked} months of data · trend {forecast.trendPerMonth >= 0 ? "+" : ""}
+                  {forecast.trendPerMonth.toFixed(1)}pt/month
+                </span>
+              </div>
+            </div>
+          )}
           <div style={{ background: "#1A2028", border: "1px solid #2E3742", borderRadius: 10, padding: 18 }}>
             <div style={{ fontSize: 12, color: "#8D97A3", marginBottom: 12, letterSpacing: 0.5 }}>
               SPEND BY CATEGORY
@@ -359,15 +440,21 @@ function StatCard({ label, value, accent }) {
 }
 
 function EntriesView({ data, setData }) {
+  const rate = data.exchangeRate || 1600;
   const [form, setForm] = useState({
     date: new Date().toISOString().slice(0, 10), category: CATS[0].id,
-    vendor: "", amount: "", note: "", project: "", addedBy: "",
+    vendor: "", amount: "", note: "", project: "", addedBy: "", currency: "NGN",
   });
 
   const addEntry = async (e) => {
     e.preventDefault();
     if (!form.amount || Number(form.amount) <= 0) return;
-    const entry = { id: Date.now().toString(36), ...form, amount: Number(form.amount) };
+    const enteredAmount = Number(form.amount);
+    const ngnAmount = form.currency === "USD" ? enteredAmount * rate : enteredAmount;
+    const entry = {
+      id: Date.now().toString(36), ...form,
+      amount: ngnAmount, originalAmount: enteredAmount, fxRate: form.currency === "USD" ? rate : null,
+    };
     await setData({ ...data, entries: [entry, ...data.entries] });
     setForm({ ...form, vendor: "", amount: "", note: "" });
   };
@@ -404,9 +491,21 @@ function EntriesView({ data, setData }) {
           <input style={inputStyle} value={form.vendor}
             onChange={(e) => setForm({ ...form, vendor: e.target.value })} placeholder="Optional" />
         </Field>
-        <Field label="Amount (NGN)">
-          <input type="number" min="0" style={inputStyle} value={form.amount}
-            onChange={(e) => setForm({ ...form, amount: e.target.value })} placeholder="0" />
+        <Field label="Amount">
+          <div style={{ display: "flex", gap: 6 }}>
+            <select value={form.currency} onChange={(e) => setForm({ ...form, currency: e.target.value })}
+              style={{ ...inputStyle, width: 74, flexShrink: 0 }}>
+              <option value="NGN">NGN</option>
+              <option value="USD">USD</option>
+            </select>
+            <input type="number" min="0" style={inputStyle} value={form.amount}
+              onChange={(e) => setForm({ ...form, amount: e.target.value })} placeholder="0" />
+          </div>
+          {form.currency === "USD" && form.amount > 0 && (
+            <div style={{ fontSize: 11, color: "#8D97A3", marginTop: 4 }}>
+              ≈ {fmtNaira(Number(form.amount) * rate)} at ₦{rate.toLocaleString()}/$1
+            </div>
+          )}
         </Field>
         <Field label="Logged by">
           <input style={inputStyle} value={form.addedBy}
@@ -491,7 +590,7 @@ function QuotaView({ data, setData }) {
   return (
     <div style={{ padding: 28, fontFamily: "IBM Plex Sans, sans-serif" }} className="nc-main-content">
       <h1 style={{ fontFamily: "Oswald, sans-serif", textTransform: "uppercase", letterSpacing: 1,
-        fontSize: 20, color: "#EDEFF2", margin: "0 0 4px" }}>Expatriate quota tracker</h1>
+        fontSize: 20, color: "#EDEFF2", margin: "0 0 4px" }}>Expatriate quota report</h1>
       <p style={{ color: "#8D97A3", fontSize: 13, margin: "0 0 20px" }}>
         Track approved expatriate positions against Nigerian understudy progress.
       </p>
@@ -541,6 +640,148 @@ function QuotaView({ data, setData }) {
             </div>
           );
         })}
+      </div>
+    </div>
+  );
+}
+
+function calcCarbon(carbonEntries) {
+  const totals = {};
+  FUEL_TYPES.forEach((f) => (totals[f.id] = { quantity: 0, co2e: 0 }));
+  (carbonEntries || []).forEach((e) => {
+    const fuel = FUEL_TYPES.find((f) => f.id === e.fuelType);
+    if (!fuel) return;
+    totals[fuel.id].quantity += Number(e.quantity || 0);
+    totals[fuel.id].co2e += Number(e.quantity || 0) * fuel.factor;
+  });
+  const totalCo2e = Object.values(totals).reduce((s, t) => s + t.co2e, 0);
+  return { totals, totalCo2e };
+}
+
+function CarbonView({ data, setData }) {
+  const carbonEntries = data.carbonEntries || [];
+  const [form, setForm] = useState({
+    date: new Date().toISOString().slice(0, 10), fuelType: FUEL_TYPES[0].id,
+    project: "", quantity: "", addedBy: "",
+  });
+  const { totals, totalCo2e } = calcCarbon(carbonEntries);
+
+  const addEntry = async (e) => {
+    e.preventDefault();
+    if (!form.quantity || Number(form.quantity) <= 0) return;
+    const entry = { id: Date.now().toString(36), ...form, quantity: Number(form.quantity) };
+    await setData({ ...data, carbonEntries: [entry, ...carbonEntries] });
+    setForm({ ...form, quantity: "" });
+  };
+
+  const removeEntry = async (id) => {
+    await setData({ ...data, carbonEntries: carbonEntries.filter((e) => e.id !== id) });
+  };
+
+  return (
+    <div style={{ padding: 28, fontFamily: "IBM Plex Sans, sans-serif" }} className="nc-main-content">
+      <h1 style={{ fontFamily: "Oswald, sans-serif", textTransform: "uppercase", letterSpacing: 1,
+        fontSize: 20, color: "#EDEFF2", margin: "0 0 4px" }}>Carbon intensity</h1>
+      <p style={{ color: "#8D97A3", fontSize: 13, margin: "0 0 20px" }}>
+        Track fuel, flaring, and electricity consumption by asset, converted to an estimated CO2e footprint.
+      </p>
+
+      <div style={{ display: "flex", gap: 16, flexWrap: "wrap", marginBottom: 22 }}>
+        <div style={{ background: "#1A2028", border: "1px solid #2E3742", borderRadius: 10,
+          padding: "16px 20px", minWidth: 220 }}>
+          <div style={{ fontSize: 11, color: "#8D97A3", marginBottom: 6 }}>ESTIMATED TOTAL EMISSIONS</div>
+          <div style={{ fontFamily: "IBM Plex Mono, monospace", fontSize: 22, fontWeight: 700, color: "#4FAE7E" }}>
+            {(totalCo2e / 1000).toLocaleString(undefined, { maximumFractionDigits: 2 })} t CO2e
+          </div>
+        </div>
+        {FUEL_TYPES.map((f) => (
+          <div key={f.id} style={{ background: "#1A2028", border: "1px solid #2E3742", borderRadius: 10,
+            padding: "16px 20px", minWidth: 170 }}>
+            <div style={{ fontSize: 11, color: "#8D97A3", marginBottom: 6 }}>{f.label.toUpperCase()}</div>
+            <div style={{ fontFamily: "IBM Plex Mono, monospace", fontSize: 15, color: "#EDEFF2" }}>
+              {totals[f.id].quantity.toLocaleString()} {f.unit}
+            </div>
+          </div>
+        ))}
+      </div>
+
+      <form onSubmit={addEntry} className="nc-form-grid" style={{
+        display: "grid", gridTemplateColumns: "120px 1fr 1fr", gap: 10,
+        background: "#1A2028", border: "1px solid #2E3742",
+        borderRadius: 10, padding: 16, marginBottom: 22, rowGap: 12,
+      }}>
+        <Field label="Date">
+          <input type="date" style={inputStyle} value={form.date}
+            onChange={(e) => setForm({ ...form, date: e.target.value })} />
+        </Field>
+        <Field label="Fuel / energy type">
+          <select style={inputStyle} value={form.fuelType}
+            onChange={(e) => setForm({ ...form, fuelType: e.target.value })}>
+            {FUEL_TYPES.map((f) => <option key={f.id} value={f.id}>{f.label}</option>)}
+          </select>
+        </Field>
+        <Field label="Asset / project">
+          <input style={inputStyle} value={form.project}
+            onChange={(e) => setForm({ ...form, project: e.target.value })} placeholder="e.g. Bonga North" />
+        </Field>
+        <Field label={`Quantity (${FUEL_TYPES.find((f) => f.id === form.fuelType)?.unit || ""})`}>
+          <input type="number" min="0" style={inputStyle} value={form.quantity}
+            onChange={(e) => setForm({ ...form, quantity: e.target.value })} placeholder="0" />
+        </Field>
+        <Field label="Logged by">
+          <input style={inputStyle} value={form.addedBy}
+            onChange={(e) => setForm({ ...form, addedBy: e.target.value })} placeholder="Your name" />
+        </Field>
+        <div style={{ display: "flex", alignItems: "end" }}>
+          <button type="submit" style={btnPrimary}><Plus size={15} /> Add entry</button>
+        </div>
+      </form>
+
+      <div style={{ background: "#1A2028", border: "1px solid #2E3742", borderRadius: 10, overflow: "auto" }}>
+        <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }}>
+          <thead>
+            <tr style={{ background: "#0F1216", color: "#8D97A3", textAlign: "left" }}>
+              {["Date", "Type", "Asset", "Quantity", "Est. CO2e", "Logged by", ""].map((h) => (
+                <th key={h} style={{ padding: "10px 14px", fontWeight: 500, whiteSpace: "nowrap" }}>{h}</th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {carbonEntries.length === 0 && (
+              <tr><td colSpan={7} style={{ padding: 20, color: "#5B6470", textAlign: "center" }}>
+                No entries yet. Log fuel, flaring, or electricity use above.
+              </td></tr>
+            )}
+            {carbonEntries.map((e) => {
+              const fuel = FUEL_TYPES.find((f) => f.id === e.fuelType);
+              const co2e = Number(e.quantity || 0) * (fuel?.factor || 0);
+              return (
+                <tr key={e.id} style={{ borderTop: "1px solid #2E3742", color: "#EDEFF2" }}>
+                  <td style={{ padding: "10px 14px", color: "#8D97A3", whiteSpace: "nowrap" }}>{e.date}</td>
+                  <td style={{ padding: "10px 14px", whiteSpace: "nowrap" }}>{fuel?.label}</td>
+                  <td style={{ padding: "10px 14px", color: "#8D97A3" }}>{e.project || "—"}</td>
+                  <td style={{ padding: "10px 14px", fontFamily: "IBM Plex Mono, monospace" }}>
+                    {Number(e.quantity).toLocaleString()} {fuel?.unit}
+                  </td>
+                  <td style={{ padding: "10px 14px", fontFamily: "IBM Plex Mono, monospace", color: "#4FAE7E" }}>
+                    {co2e.toLocaleString(undefined, { maximumFractionDigits: 1 })} kg
+                  </td>
+                  <td style={{ padding: "10px 14px", color: "#8D97A3" }}>{e.addedBy || "—"}</td>
+                  <td style={{ padding: "10px 14px" }}>
+                    <button onClick={() => removeEntry(e.id)} style={{
+                      background: "none", border: "none", color: "#5B6470", cursor: "pointer" }}>
+                      <Trash2 size={14} />
+                    </button>
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
+      <div style={{ fontSize: 11, color: "#5B6470", marginTop: 10 }}>
+        Emission factors used are indicative industry defaults for internal tracking only. Validate against
+        NUPRC/NCDMB-approved methodology before external or regulatory reporting.
       </div>
     </div>
   );
@@ -679,7 +920,7 @@ export default function App() {
   const [view, setView] = useState("dashboard");
 
   useEffect(() => {
-    document.title = "NC Compliance Tracker";
+    document.title = "NC Compliance Report";
   }, []);
 
   if (!companyId) {
@@ -737,6 +978,7 @@ export default function App() {
           {view === "dashboard" && <Dashboard data={data} setData={setData} />}
           {view === "entries" && <EntriesView data={data} setData={setData} />}
           {view === "quota" && <QuotaView data={data} setData={setData} />}
+          {view === "carbon" && <CarbonView data={data} setData={setData} />}
           {view === "report" && <ReportView data={data} />}
         </div>
       </div>
