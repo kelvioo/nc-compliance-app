@@ -903,12 +903,86 @@ function ReportView({ data }) {
           </tbody>
         </table>
 
-        <div style={{ fontSize: 11, color: "#5B6470" }}>
+        <div style={{ fontSize: 11, color: "#5B6470", marginBottom: 24 }}>
           Local spend {fmtNaira(local)} · Foreign spend {fmtNaira(foreign)} · {filtered.length} entries
           {(from || to) ? " in selected period" : " logged"}.
           NC percentage is a simplified local-vs-foreign spend ratio for internal tracking purposes and should be
           reconciled against the official NCDMB Nigerian Content formula before formal submission.
         </div>
+
+        {(data.expatPositions || []).length > 0 && (
+          <>
+            <div style={{ borderTop: "1px solid #2E3742", paddingTop: 16, marginBottom: 12 }}>
+              <div style={{ fontFamily: "Oswald, sans-serif", fontSize: 14, color: "#EDEFF2",
+                textTransform: "uppercase", letterSpacing: 1 }}>Expatriate quota</div>
+            </div>
+            <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13, marginBottom: 24 }}>
+              <thead>
+                <tr style={{ color: "#8D97A3", textAlign: "left" }}>
+                  <th style={{ padding: "6px 0", fontWeight: 500 }}>Position</th>
+                  <th style={{ padding: "6px 0", fontWeight: 500, textAlign: "right" }}>Approved</th>
+                  <th style={{ padding: "6px 0", fontWeight: 500, textAlign: "right" }}>Localised</th>
+                </tr>
+              </thead>
+              <tbody>
+                {data.expatPositions.map((p) => (
+                  <tr key={p.id} style={{ borderTop: "1px solid #2E3742", color: "#EDEFF2" }}>
+                    <td style={{ padding: "8px 0" }}>{p.role}</td>
+                    <td style={{ padding: "8px 0", textAlign: "right", fontFamily: "IBM Plex Mono, monospace" }}>
+                      {p.approvedSlots}
+                    </td>
+                    <td style={{ padding: "8px 0", textAlign: "right", fontFamily: "IBM Plex Mono, monospace" }}>
+                      {p.nigerianUnderstudies} / {p.approvedSlots}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </>
+        )}
+
+        {(data.carbonEntries || []).length > 0 && (() => {
+          const { totals: cTotals, totalCo2e } = calcCarbon(data.carbonEntries);
+          return (
+            <>
+              <div style={{ borderTop: "1px solid #2E3742", paddingTop: 16, marginBottom: 12 }}>
+                <div style={{ fontFamily: "Oswald, sans-serif", fontSize: 14, color: "#EDEFF2",
+                  textTransform: "uppercase", letterSpacing: 1 }}>Carbon intensity</div>
+              </div>
+              <div style={{ marginBottom: 12 }}>
+                <div style={{ fontSize: 11, color: "#8D97A3" }}>Estimated total emissions</div>
+                <div style={{ fontFamily: "IBM Plex Mono, monospace", fontSize: 20, color: "#4FAE7E" }}>
+                  {(totalCo2e / 1000).toLocaleString(undefined, { maximumFractionDigits: 2 })} t CO2e
+                </div>
+              </div>
+              <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13, marginBottom: 12 }}>
+                <thead>
+                  <tr style={{ color: "#8D97A3", textAlign: "left" }}>
+                    <th style={{ padding: "6px 0", fontWeight: 500 }}>Type</th>
+                    <th style={{ padding: "6px 0", fontWeight: 500, textAlign: "right" }}>Quantity</th>
+                    <th style={{ padding: "6px 0", fontWeight: 500, textAlign: "right" }}>Est. CO2e</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {FUEL_TYPES.map((f) => (
+                    <tr key={f.id} style={{ borderTop: "1px solid #2E3742", color: "#EDEFF2" }}>
+                      <td style={{ padding: "8px 0" }}>{f.label}</td>
+                      <td style={{ padding: "8px 0", textAlign: "right", fontFamily: "IBM Plex Mono, monospace" }}>
+                        {cTotals[f.id].quantity.toLocaleString()} {f.unit}
+                      </td>
+                      <td style={{ padding: "8px 0", textAlign: "right", fontFamily: "IBM Plex Mono, monospace" }}>
+                        {cTotals[f.id].co2e.toLocaleString(undefined, { maximumFractionDigits: 1 })} kg
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+              <div style={{ fontSize: 11, color: "#5B6470" }}>
+                Emission factors are indicative industry defaults for internal tracking, not certified figures.
+              </div>
+            </>
+          );
+        })()}
       </div>
     </div>
   );
