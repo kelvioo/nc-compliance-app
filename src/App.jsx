@@ -904,6 +904,40 @@ function ReportView({ data }) {
           </tbody>
         </table>
 
+        {filtered.length > 0 && (
+          <>
+            <div style={{ fontFamily: "Oswald, sans-serif", fontSize: 14, color: "#EDEFF2",
+              textTransform: "uppercase", letterSpacing: 1, marginBottom: 10 }}>Entry detail</div>
+            <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 12, marginBottom: 24 }}>
+              <thead>
+                <tr style={{ color: "#8D97A3", textAlign: "left" }}>
+                  <th style={{ padding: "6px 0", fontWeight: 500 }}>Date</th>
+                  <th style={{ padding: "6px 0", fontWeight: 500 }}>Category</th>
+                  <th style={{ padding: "6px 0", fontWeight: 500 }}>Vendor</th>
+                  <th style={{ padding: "6px 0", fontWeight: 500 }}>Note</th>
+                  <th style={{ padding: "6px 0", fontWeight: 500, textAlign: "right" }}>Amount</th>
+                </tr>
+              </thead>
+              <tbody>
+                {filtered.map((e) => {
+                  const cat = CATS.find((c) => c.id === e.category);
+                  return (
+                    <tr key={e.id} style={{ borderTop: "1px solid #2E3742", color: "#EDEFF2" }}>
+                      <td style={{ padding: "6px 0" }}>{e.date}</td>
+                      <td style={{ padding: "6px 0" }}>{cat?.label}</td>
+                      <td style={{ padding: "6px 0" }}>{e.vendor || "—"}</td>
+                      <td style={{ padding: "6px 0" }}>{e.note || "—"}</td>
+                      <td style={{ padding: "6px 0", textAlign: "right", fontFamily: "IBM Plex Mono, monospace" }}>
+                        {fmtNaira(e.amount)}
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </>
+        )}
+
         <div style={{ fontSize: 11, color: "#5B6470", marginBottom: 24 }}>
           Local spend {fmtNaira(local)} · Foreign spend {fmtNaira(foreign)} · {filtered.length} entries
           {(from || to) ? " in selected period" : " logged"}.
@@ -1023,7 +1057,19 @@ export default function App() {
     <>
       <FontLoader />
       <style>{`
-        @media print { .no-print { display: none !important; } }
+        @media print {
+          .no-print { display: none !important; }
+          body { background: #FFFFFF !important; }
+          #printable {
+            background: #FFFFFF !important;
+            border: 1px solid #999999 !important;
+            color: #000000 !important;
+          }
+          #printable * {
+            color: #000000 !important;
+            border-color: #999999 !important;
+          }
+        }
         @media (max-width: 720px) {
           .nc-layout { flex-direction: column !important; }
           .nc-sidebar {
