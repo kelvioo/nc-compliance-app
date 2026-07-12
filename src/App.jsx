@@ -526,14 +526,14 @@ function EntriesView({ data, setData }) {
         <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }}>
           <thead>
             <tr style={{ background: "#0F1216", color: "#8D97A3", textAlign: "left" }}>
-              {["Date", "Category", "Project", "Vendor", "Amount", "Logged by", ""].map((h) => (
+              {["Date", "Category", "Project", "Vendor", "Amount", "Note", "Logged by", ""].map((h) => (
                 <th key={h} style={{ padding: "10px 14px", fontWeight: 500, whiteSpace: "nowrap" }}>{h}</th>
               ))}
             </tr>
           </thead>
           <tbody>
             {data.entries.length === 0 && (
-              <tr><td colSpan={7} style={{ padding: 20, color: "#5B6470", textAlign: "center" }}>
+              <tr><td colSpan={8} style={{ padding: 20, color: "#5B6470", textAlign: "center" }}>
                 No entries yet. Log your first spend item above.
               </td></tr>
             )}
@@ -551,6 +551,7 @@ function EntriesView({ data, setData }) {
                   <td style={{ padding: "10px 14px", fontFamily: "IBM Plex Mono, monospace", whiteSpace: "nowrap" }}>
                     {fmtNaira(e.amount)}
                   </td>
+                  <td style={{ padding: "10px 14px", color: "#8D97A3", maxWidth: 160 }}>{e.note || "—"}</td>
                   <td style={{ padding: "10px 14px", color: "#8D97A3" }}>{e.addedBy || "—"}</td>
                   <td style={{ padding: "10px 14px" }}>
                     <button onClick={() => removeEntry(e.id)} style={{
