@@ -29,58 +29,50 @@ const fmtNaira = (n) =>
 
 const slugify = (s) => s.trim().toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
 
-// window.storage only exists inside Claude's artifact viewer. When this file
-// runs anywhere else (VS Code / a local dev server / a deployed site), this
-// fills in the same API using the browser's localStorage instead, so the
-// app keeps working without any code changes.
-if (typeof window !== "undefined" && !window.storage) {
-  window.storage = {
-    async get(key) {
-      const v = localStorage.getItem(key);
-      if (v === null) throw new Error(`key not found: ${key}`);
-      return { key, value: v, shared: false };
-    },
-    async set(key, value) {
-      localStorage.setItem(key, value);
-      return { key, value, shared: false };
-    },
-    async delete(key) {
-      localStorage.removeItem(key);
-      return { key, deleted: true, shared: false };
-    },
-    async list(prefix) {
-      const keys = Object.keys(localStorage).filter((k) => !prefix || k.startsWith(prefix));
-      return { keys, prefix, shared: false };
-    },
-  };
-}
+// Data now lives in Supabase (Postgres), not the browser. This means the
+// same company login pulls the same data on any device, in real time,
+// instead of each browser/device having its own separate copy.
+// See supabaseClient.js for the connection, and the SQL migration for the
+// two database functions (nc_login_or_create, nc_save) this calls.
+import { supabase } from "./supabaseClient";
 
-function useCompanyStorage(companyId) {
+function useCompanyStorage(session) {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
 
   const load = useCallback(async () => {
-    if (!companyId) return;
+    if (!session) return;
     setLoading(true);
     try {
-      const res = await window.storage.get(`company:${companyId}`);
-      setData(res ? JSON.parse(res.value) : null);
+      const { data: result, error } = await supabase.rpc("nc_login_or_create", {
+        p_id: session.id,
+        p_name: session.name,
+        p_pin: session.pin,
+      });
+      if (error) throw error;
+      setData(result);
     } catch (e) {
+      console.error("load failed", e);
       setData(null);
     }
     setLoading(false);
-  }, [companyId]);
+  }, [session]);
 
   useEffect(() => { load(); }, [load]);
 
   const save = useCallback(async (next) => {
     setData(next);
     try {
-      await window.storage.set(`company:${companyId}`, JSON.stringify(next));
+      const { error } = await supabase.rpc("nc_save", {
+        p_id: session.id,
+        p_pin: session.pin,
+        p_data: next,
+      });
+      if (error) throw error;
     } catch (e) {
       console.error("save failed", e);
     }
-  }, [companyId]);
+  }, [session]);
 
   return { data, setData: save, loading, reload: load };
 }
@@ -168,32 +160,23 @@ function LoginScreen({ onEnter }) {
     setError("");
     const id = slugify(name) || "company";
     try {
-      let existing = null;
-      try {
-        const res = await window.storage.get(`company:${id}`);
-        existing = res ? JSON.parse(res.value) : null;
-      } catch (readErr) {
-        existing = null;
-      }
-
-      if (existing) {
-        if (existing.pin !== pin) {
+      const { error } = await supabase.rpc("nc_login_or_create", {
+        p_id: id,
+        p_name: name.trim(),
+        p_pin: pin,
+      });
+      if (error) {
+        if (error.message && error.message.includes("invalid_pin")) {
           setError("That PIN doesn't match this company's records.");
-          setBusy(false);
-          return;
+        } else {
+          setError("Couldn't reach the server: " + error.message + ". Try again.");
         }
-        onEnter(id);
-      } else {
-        const fresh = {
-          name: name.trim(), pin, target: 70, entries: [], expatPositions: [], carbonEntries: [],
-          exchangeRate: 1600,
-          createdAt: new Date().toISOString(),
-        };
-        await window.storage.set(`company:${id}`, JSON.stringify(fresh));
-        onEnter(id);
+        setBusy(false);
+        return;
       }
+      onEnter({ id, name: name.trim(), pin });
     } catch (e2) {
-      setError("Couldn't reach storage: " + (e2 && e2.message ? e2.message : "unknown error") + ". Try again.");
+      setError("Couldn't reach the server: " + (e2 && e2.message ? e2.message : "unknown error") + ". Try again.");
     }
     setBusy(false);
   };
@@ -1024,19 +1007,19 @@ function ReportView({ data }) {
 }
 
 export default function App() {
-  const [companyId, setCompanyId] = useState(null);
-  const { data, setData, loading } = useCompanyStorage(companyId);
+  const [session, setSession] = useState(null);
+  const { data, setData, loading } = useCompanyStorage(session);
   const [view, setView] = useState("dashboard");
 
   useEffect(() => {
     document.title = "NC Compliance Report";
   }, []);
 
-  if (!companyId) {
+  if (!session) {
     return (
       <>
         <FontLoader />
-        <LoginScreen onEnter={setCompanyId} />
+        <LoginScreen onEnter={setSession} />
       </>
     );
   }
@@ -1093,7 +1076,7 @@ export default function App() {
       `}</style>
       <div style={{ display: "flex", minHeight: 560, background: "#12161B", borderRadius: 10, overflow: "hidden" }} className="nc-layout">
         <div className="no-print">
-          <Sidebar view={view} setView={setView} company={data} onLogout={() => setCompanyId(null)} />
+          <Sidebar view={view} setView={setView} company={data} onLogout={() => setSession(null)} />
         </div>
         <div style={{ flex: 1, overflow: "auto" }} className="nc-main-content-wrap">
           {view === "dashboard" && <Dashboard data={data} setData={setData} />}
