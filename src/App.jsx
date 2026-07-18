@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from "react";
 import {
   Gauge, Plus, FileText, Users, LogOut, Building2, TrendingUp,
-  Trash2, ChevronRight, ClipboardList, ShieldCheck, X, Loader2, Leaf
+  Trash2, ChevronRight, ClipboardList, ShieldCheck, X, Loader2, Leaf, RefreshCw
 } from "lucide-react";
 
 const CATS = [
@@ -219,7 +219,7 @@ function LoginScreen({ onEnter }) {
   );
 }
 
-function Sidebar({ view, setView, company, onLogout }) {
+function Sidebar({ view, setView, company, onLogout, onRefresh, refreshing }) {
   const items = [
     { id: "dashboard", label: "Dashboard", icon: Gauge },
     { id: "entries", label: "Spend log", icon: ClipboardList },
@@ -257,6 +257,15 @@ function Sidebar({ view, setView, company, onLogout }) {
         );
       })}
       <div className="nc-sidebar-spacer" style={{ flex: 1 }} />
+      <button onClick={onRefresh} disabled={refreshing} className="nc-sidebar-logout" style={{
+        display: "flex", alignItems: "center", gap: 10, padding: "10px 12px",
+        borderRadius: 6, border: "none", background: "transparent", color: "#8D97A3",
+        cursor: refreshing ? "default" : "pointer", fontSize: 13, fontFamily: "IBM Plex Sans, sans-serif",
+        opacity: refreshing ? 0.6 : 1,
+      }}>
+        <RefreshCw size={15} style={refreshing ? { animation: "nc-spin 0.8s linear infinite" } : undefined} />
+        {refreshing ? "Refreshing…" : "Refresh data"}
+      </button>
       <button onClick={onLogout} className="nc-sidebar-logout" style={{
         display: "flex", alignItems: "center", gap: 10, padding: "10px 12px",
         borderRadius: 6, border: "none", background: "transparent", color: "#5B6470",
@@ -1006,10 +1015,38 @@ function ReportView({ data }) {
   );
 }
 
+const SESSION_KEY = "nc_session";
+
 export default function App() {
-  const [session, setSession] = useState(null);
-  const { data, setData, loading } = useCompanyStorage(session);
+  const [session, setSessionState] = useState(() => {
+    // Restore login across page refreshes/reopens, so refreshing the page
+    // (or opening the app again later) doesn't force a re-login.
+    try {
+      const saved = localStorage.getItem(SESSION_KEY);
+      return saved ? JSON.parse(saved) : null;
+    } catch (e) {
+      return null;
+    }
+  });
+  const setSession = useCallback((next) => {
+    setSessionState(next);
+    try {
+      if (next) localStorage.setItem(SESSION_KEY, JSON.stringify(next));
+      else localStorage.removeItem(SESSION_KEY);
+    } catch (e) {
+      // ignore storage errors (e.g. private browsing)
+    }
+  }, []);
+
+  const { data, setData, loading, reload } = useCompanyStorage(session);
   const [view, setView] = useState("dashboard");
+  const [refreshing, setRefreshing] = useState(false);
+
+  const handleRefresh = useCallback(async () => {
+    setRefreshing(true);
+    await reload();
+    setRefreshing(false);
+  }, [reload]);
 
   useEffect(() => {
     document.title = "NC Compliance Report";
@@ -1040,6 +1077,10 @@ export default function App() {
     <>
       <FontLoader />
       <style>{`
+        @keyframes nc-spin {
+          from { transform: rotate(0deg); }
+          to { transform: rotate(360deg); }
+        }
         @media print {
           .no-print { display: none !important; }
           body { background: #FFFFFF !important; }
@@ -1076,7 +1117,8 @@ export default function App() {
       `}</style>
       <div style={{ display: "flex", minHeight: 560, background: "#12161B", borderRadius: 10, overflow: "hidden" }} className="nc-layout">
         <div className="no-print">
-          <Sidebar view={view} setView={setView} company={data} onLogout={() => setSession(null)} />
+          <Sidebar view={view} setView={setView} company={data} onLogout={() => setSession(null)}
+            onRefresh={handleRefresh} refreshing={refreshing} />
         </div>
         <div style={{ flex: 1, overflow: "auto" }} className="nc-main-content-wrap">
           {view === "dashboard" && <Dashboard data={data} setData={setData} />}
