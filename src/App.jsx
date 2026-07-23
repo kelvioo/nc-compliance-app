@@ -1395,6 +1395,10 @@ function QuarterlyReportsView({ data, setData }) {
     description: "", contractor: "", category: CONTRACT_CATEGORIES[0], nature: CONTRACT_NATURE[0],
     estimatedValueUsd: "", status: CONTRACT_STATUSES[0], quarter: getQuarterOptions()[0].id,
     tenderNumber: "", ittIssuance: "", ittClosure: "", awardDate: "", remarks: "",
+    origin: "Nigerian", ncecNumber: "", nogicJqsId: "", serviceType: "", equipmentDeployed: "",
+    partneringVendor: "", materialType: "", quantity: "", unitsOfMeasurement: "",
+    originOfManufacture: "Nigerian", oemName: "", poDate: "", projectOwner: "", projectTitle: "",
+    contractStart: "", contractEnd: "", spendIncountry: "", spendOutcountry: "",
   });
   const [marineForm, setMarineForm] = useState({
     contractorName: "", address: "", contactPhone: "", contactEmail: "", nimasaOwnerCert: "", categorizationStatus: "",
@@ -1409,10 +1413,16 @@ function QuarterlyReportsView({ data, setData }) {
   const addContract = async (e) => {
     e.preventDefault();
     if (!form.description.trim()) return;
-    const row = { id: Date.now().toString(36), ...form, estimatedValueUsd: Number(form.estimatedValueUsd || 0) };
+    const spendIn = Number(form.spendIncountry || 0), spendOut = Number(form.spendOutcountry || 0);
+    const value = Number(form.estimatedValueUsd || 0) || (spendIn + spendOut);
+    const row = { id: Date.now().toString(36), ...form, estimatedValueUsd: value,
+      spendIncountry: spendIn, spendOutcountry: spendOut, quantity: Number(form.quantity || 0) };
     await setData({ ...data, contracts: [row, ...contracts] });
     setForm({ ...form, description: "", contractor: "", estimatedValueUsd: "", tenderNumber: "",
-      ittIssuance: "", ittClosure: "", awardDate: "", remarks: "" });
+      ittIssuance: "", ittClosure: "", awardDate: "", remarks: "", ncecNumber: "", nogicJqsId: "",
+      serviceType: "", equipmentDeployed: "", partneringVendor: "", materialType: "", quantity: "",
+      unitsOfMeasurement: "", oemName: "", poDate: "", projectOwner: "", projectTitle: "",
+      contractStart: "", contractEnd: "", spendIncountry: "", spendOutcountry: "" });
   };
   const removeContract = async (id) => {
     await setData({ ...data, contracts: contracts.filter((c) => c.id !== id) });
@@ -1447,12 +1457,18 @@ function QuarterlyReportsView({ data, setData }) {
         r.ittIssuance || "—", r.ittClosure || "—", r.awardDate || "—", r.remarks || "—"] },
     procMaterials: { label: "Procurement Report — Materials (§24) — below $1,000,000", section: "24", rows: procurementMaterialsRows,
       title: "QUARTERLY PROCUREMENT REPORTING TEMPLATE (MATERIALS)",
-      headers: ["S/N", "Description", "Contractor", "Category", "Est. value (USD)", "Status"],
-      rowsFn: (r, i) => [i + 1, r.description, r.contractor || "—", r.category, "$" + Number(r.estimatedValueUsd).toLocaleString(), r.status] },
+      headers: ["S/N", "Supplier", "Origin", "NCEC No.", "Item Description", "Material Type", "Qty/Units", "Project Owner", "Project Title", "Spend In", "Spend Out", "Total (USD)"],
+      rowsFn: (r, i) => [i + 1, r.contractor || "—", r.origin || "—", r.ncecNumber || "—", r.description,
+        r.materialType || "—", `${r.quantity || 0} ${r.unitsOfMeasurement || ""}`, r.projectOwner || "—",
+        r.projectTitle || "—", "$" + Number(r.spendIncountry || 0).toLocaleString(),
+        "$" + Number(r.spendOutcountry || 0).toLocaleString(), "$" + Number(r.estimatedValueUsd).toLocaleString()] },
     procServices: { label: "Procurement Report — Services (§24) — below $1,000,000", section: "24", rows: procurementServicesRows,
       title: "QUARTERLY PROCUREMENT REPORTING TEMPLATE (SERVICES)",
-      headers: ["S/N", "Description", "Contractor", "Category", "Est. value (USD)", "Status"],
-      rowsFn: (r, i) => [i + 1, r.description, r.contractor || "—", r.category, "$" + Number(r.estimatedValueUsd).toLocaleString(), r.status] },
+      headers: ["S/N", "Company (Vendor)", "Origin", "NCEC No.", "Service Description", "Service Type", "Project Owner", "Project Title", "Spend In", "Spend Out", "Total (USD)"],
+      rowsFn: (r, i) => [i + 1, r.contractor || "—", r.origin || "—", r.ncecNumber || "—", r.description,
+        r.serviceType || "—", r.projectOwner || "—", r.projectTitle || "—",
+        "$" + Number(r.spendIncountry || 0).toLocaleString(), "$" + Number(r.spendOutcountry || 0).toLocaleString(),
+        "$" + Number(r.estimatedValueUsd).toLocaleString()] },
     marine: { label: "Marine Services Utilization Report (§24)", section: "24", rows: marineInQuarter,
       title: "QUARTERLY MARINE VESSEL UTILIZATION REPORTING TEMPLATE",
       headers: ["S/N", "Vessel Name", "Vessel Type", "Contractor", "IMO No.", "Flagging", "Project Name", "Spend Incountry", "Spend Outcountry", "NG POB", "Exp. POB"],
@@ -1499,69 +1515,188 @@ function QuarterlyReportsView({ data, setData }) {
 
       {tab === "register" && (
         <>
-          <form onSubmit={addContract} className="nc-form-grid" style={{
-            display: "grid", gridTemplateColumns: "1fr 1fr 140px 140px", gap: 10,
+          <form onSubmit={addContract} style={{
             background: "#1A2028", border: "1px solid #2E3742", borderRadius: 10,
-            padding: 16, marginBottom: 22, rowGap: 12,
+            padding: 16, marginBottom: 22, display: "flex", flexDirection: "column", gap: 14,
           }}>
-            <Field label="Description of service / item">
-              <input style={inputStyle} value={form.description}
-                onChange={(e) => setForm({ ...form, description: e.target.value })}
-                placeholder="e.g. Supply of wellhead equipment" />
-            </Field>
-            <Field label="Contractor / vendor">
-              <input style={inputStyle} value={form.contractor}
-                onChange={(e) => setForm({ ...form, contractor: e.target.value })} placeholder="Optional" />
-            </Field>
-            <Field label="Category">
-              <select style={inputStyle} value={form.category}
-                onChange={(e) => setForm({ ...form, category: e.target.value })}>
-                {CONTRACT_CATEGORIES.map((c) => <option key={c} value={c}>{c}</option>)}
-              </select>
-            </Field>
-            <Field label="Materials or services">
-              <select style={inputStyle} value={form.nature}
-                onChange={(e) => setForm({ ...form, nature: e.target.value })}>
-                {CONTRACT_NATURE.map((n) => <option key={n} value={n}>{n}</option>)}
-              </select>
-            </Field>
-            <Field label="Tender number">
-              <input style={inputStyle} value={form.tenderNumber}
-                onChange={(e) => setForm({ ...form, tenderNumber: e.target.value })} placeholder="Optional" />
-            </Field>
-            <Field label="Estimated cost / value (USD)">
-              <input type="number" min="0" style={inputStyle} value={form.estimatedValueUsd}
-                onChange={(e) => setForm({ ...form, estimatedValueUsd: e.target.value })} placeholder="0" />
-            </Field>
-            <Field label="ITT issuance date">
-              <input type="date" style={inputStyle} value={form.ittIssuance}
-                onChange={(e) => setForm({ ...form, ittIssuance: e.target.value })} />
-            </Field>
-            <Field label="ITT closure date">
-              <input type="date" style={inputStyle} value={form.ittClosure}
-                onChange={(e) => setForm({ ...form, ittClosure: e.target.value })} />
-            </Field>
-            <Field label="Award date">
-              <input type="date" style={inputStyle} value={form.awardDate}
-                onChange={(e) => setForm({ ...form, awardDate: e.target.value })} />
-            </Field>
-            <Field label="Status">
-              <select style={inputStyle} value={form.status}
-                onChange={(e) => setForm({ ...form, status: e.target.value })}>
-                {CONTRACT_STATUSES.map((s) => <option key={s} value={s}>{s}</option>)}
-              </select>
-            </Field>
-            <Field label="Expected quarter">
-              <select style={inputStyle} value={form.quarter}
-                onChange={(e) => setForm({ ...form, quarter: e.target.value })}>
-                {quarters.map((q) => <option key={q.id} value={q.id}>{q.quarterLabel} ({q.rangeLabel})</option>)}
-              </select>
-            </Field>
-            <Field label="Remarks">
-              <input style={inputStyle} value={form.remarks}
-                onChange={(e) => setForm({ ...form, remarks: e.target.value })} placeholder="Optional" />
-            </Field>
-            <div style={{ gridColumn: "1 / -1", display: "flex", justifyContent: "flex-end" }}>
+            <div>
+              <div style={{ fontSize: 11, color: "#8D97A3", textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 8 }}>Basics</div>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 130px 130px 130px", gap: 10 }}>
+                <Field label="Description">
+                  <input style={inputStyle} value={form.description}
+                    onChange={(e) => setForm({ ...form, description: e.target.value })}
+                    placeholder="e.g. Supply of wellhead equipment" />
+                </Field>
+                <Field label={form.nature === "Materials" ? "Supplier (vendor)" : "Company (vendor) name"}>
+                  <input style={inputStyle} value={form.contractor}
+                    onChange={(e) => setForm({ ...form, contractor: e.target.value })} />
+                </Field>
+                <Field label="Category">
+                  <select style={inputStyle} value={form.category}
+                    onChange={(e) => setForm({ ...form, category: e.target.value })}>
+                    {CONTRACT_CATEGORIES.map((c) => <option key={c} value={c}>{c}</option>)}
+                  </select>
+                </Field>
+                <Field label="Materials or services">
+                  <select style={inputStyle} value={form.nature}
+                    onChange={(e) => setForm({ ...form, nature: e.target.value })}>
+                    {CONTRACT_NATURE.map((n) => <option key={n} value={n}>{n}</option>)}
+                  </select>
+                </Field>
+                <Field label="Origin (Nigerian/Foreign)">
+                  <select style={inputStyle} value={form.origin}
+                    onChange={(e) => setForm({ ...form, origin: e.target.value })}>
+                    <option value="Nigerian">Nigerian</option>
+                    <option value="Foreign">Foreign</option>
+                  </select>
+                </Field>
+              </div>
+            </div>
+
+            <div>
+              <div style={{ fontSize: 11, color: "#8D97A3", textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 8 }}>
+                {form.nature === "Materials" ? "Material information" : "Service information"}
+              </div>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr", gap: 10 }}>
+                <Field label="NCEC number">
+                  <input style={inputStyle} value={form.ncecNumber}
+                    onChange={(e) => setForm({ ...form, ncecNumber: e.target.value })} placeholder="Optional" />
+                </Field>
+                <Field label="NOGIC JQS ID">
+                  <input style={inputStyle} value={form.nogicJqsId}
+                    onChange={(e) => setForm({ ...form, nogicJqsId: e.target.value })} placeholder="Optional" />
+                </Field>
+                {form.nature === "Materials" ? (
+                  <>
+                    <Field label="Material type">
+                      <input style={inputStyle} value={form.materialType}
+                        onChange={(e) => setForm({ ...form, materialType: e.target.value })} />
+                    </Field>
+                    <Field label="Quantity / units">
+                      <div style={{ display: "flex", gap: 6 }}>
+                        <input type="number" min="0" style={inputStyle} value={form.quantity}
+                          onChange={(e) => setForm({ ...form, quantity: e.target.value })} placeholder="Qty" />
+                        <input style={inputStyle} value={form.unitsOfMeasurement}
+                          onChange={(e) => setForm({ ...form, unitsOfMeasurement: e.target.value })} placeholder="Units" />
+                      </div>
+                    </Field>
+                    <Field label="Origin of manufacture">
+                      <select style={inputStyle} value={form.originOfManufacture}
+                        onChange={(e) => setForm({ ...form, originOfManufacture: e.target.value })}>
+                        <option value="Nigerian">Nigerian</option>
+                        <option value="Foreign">Foreign</option>
+                      </select>
+                    </Field>
+                    <Field label="Name of OEM">
+                      <input style={inputStyle} value={form.oemName}
+                        onChange={(e) => setForm({ ...form, oemName: e.target.value })} />
+                    </Field>
+                  </>
+                ) : (
+                  <>
+                    <Field label="Service type">
+                      <input style={inputStyle} value={form.serviceType}
+                        onChange={(e) => setForm({ ...form, serviceType: e.target.value })} />
+                    </Field>
+                    <Field label="Equipment deployed">
+                      <input style={inputStyle} value={form.equipmentDeployed}
+                        onChange={(e) => setForm({ ...form, equipmentDeployed: e.target.value })} placeholder="Optional" />
+                    </Field>
+                    <Field label="Partnering vendor">
+                      <input style={inputStyle} value={form.partneringVendor}
+                        onChange={(e) => setForm({ ...form, partneringVendor: e.target.value })} placeholder="Optional" />
+                    </Field>
+                  </>
+                )}
+              </div>
+            </div>
+
+            <div>
+              <div style={{ fontSize: 11, color: "#8D97A3", textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 8 }}>Contract information</div>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr 1fr", gap: 10 }}>
+                <Field label="PO date">
+                  <input type="date" style={inputStyle} value={form.poDate}
+                    onChange={(e) => setForm({ ...form, poDate: e.target.value })} />
+                </Field>
+                <Field label="Project owner">
+                  <input style={inputStyle} value={form.projectOwner}
+                    onChange={(e) => setForm({ ...form, projectOwner: e.target.value })} />
+                </Field>
+                <Field label="Project title">
+                  <input style={inputStyle} value={form.projectTitle}
+                    onChange={(e) => setForm({ ...form, projectTitle: e.target.value })} />
+                </Field>
+                <Field label="Contract start">
+                  <input type="date" style={inputStyle} value={form.contractStart}
+                    onChange={(e) => setForm({ ...form, contractStart: e.target.value })} />
+                </Field>
+                <Field label="Contract end">
+                  <input type="date" style={inputStyle} value={form.contractEnd}
+                    onChange={(e) => setForm({ ...form, contractEnd: e.target.value })} />
+                </Field>
+              </div>
+            </div>
+
+            <div>
+              <div style={{ fontSize: 11, color: "#8D97A3", textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 8 }}>Value & scheduling</div>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 130px 130px", gap: 10 }}>
+                <Field label="Spend incountry (USD)">
+                  <input type="number" min="0" style={inputStyle} value={form.spendIncountry}
+                    onChange={(e) => setForm({ ...form, spendIncountry: e.target.value })} />
+                </Field>
+                <Field label="Spend outcountry (USD)">
+                  <input type="number" min="0" style={inputStyle} value={form.spendOutcountry}
+                    onChange={(e) => setForm({ ...form, spendOutcountry: e.target.value })} />
+                </Field>
+                <Field label="Total spend value / est. value (USD)">
+                  <input type="number" min="0" style={inputStyle} value={form.estimatedValueUsd}
+                    onChange={(e) => setForm({ ...form, estimatedValueUsd: e.target.value })}
+                    placeholder={(Number(form.spendIncountry || 0) + Number(form.spendOutcountry || 0)) || "0"} />
+                </Field>
+                <Field label="Status">
+                  <select style={inputStyle} value={form.status}
+                    onChange={(e) => setForm({ ...form, status: e.target.value })}>
+                    {CONTRACT_STATUSES.map((s) => <option key={s} value={s}>{s}</option>)}
+                  </select>
+                </Field>
+                <Field label="Expected quarter">
+                  <select style={inputStyle} value={form.quarter}
+                    onChange={(e) => setForm({ ...form, quarter: e.target.value })}>
+                    {quarters.map((q) => <option key={q.id} value={q.id}>{q.quarterLabel}</option>)}
+                  </select>
+                </Field>
+              </div>
+            </div>
+
+            <div>
+              <div style={{ fontSize: 11, color: "#8D97A3", textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 8 }}>
+                Job Forecast fields (only needed if this contract is ≥ $1,000,000)
+              </div>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr 1fr", gap: 10 }}>
+                <Field label="Tender number">
+                  <input style={inputStyle} value={form.tenderNumber}
+                    onChange={(e) => setForm({ ...form, tenderNumber: e.target.value })} placeholder="Optional" />
+                </Field>
+                <Field label="ITT issuance date">
+                  <input type="date" style={inputStyle} value={form.ittIssuance}
+                    onChange={(e) => setForm({ ...form, ittIssuance: e.target.value })} />
+                </Field>
+                <Field label="ITT closure date">
+                  <input type="date" style={inputStyle} value={form.ittClosure}
+                    onChange={(e) => setForm({ ...form, ittClosure: e.target.value })} />
+                </Field>
+                <Field label="Award date">
+                  <input type="date" style={inputStyle} value={form.awardDate}
+                    onChange={(e) => setForm({ ...form, awardDate: e.target.value })} />
+                </Field>
+                <Field label="Remarks">
+                  <input style={inputStyle} value={form.remarks}
+                    onChange={(e) => setForm({ ...form, remarks: e.target.value })} placeholder="Optional" />
+                </Field>
+              </div>
+            </div>
+
+            <div style={{ display: "flex", justifyContent: "flex-end" }}>
               <button type="submit" style={btnPrimary}><Plus size={15} /> Add contract</button>
             </div>
           </form>
@@ -1980,6 +2115,55 @@ function NCDFView({ data, setData }) {
           </tbody>
         </table>
       </div>
+
+      <div className="no-print" style={{ margin: "20px 0" }}>
+        <button onClick={() => window.print()} style={btnPrimary}>
+          <FileText size={14} /> Print / save as PDF
+        </button>
+      </div>
+
+      <NCDMBDocShell title={"NCDF COMPLIANCE STATUS\n(Section 104 — 1% Nigeria Content Development Fund)"}
+        companyName={data.name}
+        meta={<>
+          <div><strong>NCFCC Certificate No.:</strong> {cert.certificateNumber || "—"}</div>
+          <div><strong>Issue Date:</strong> {cert.issueDate || "—"} &nbsp; <strong>Expiry Date:</strong> {cert.expiryDate || "—"}</div>
+        </>}
+        docLabel={`Generated ${new Date().toLocaleDateString("en-NG", { year: "numeric", month: "long", day: "numeric" })}`}
+      >
+        {ncdf.remittances.length === 0 ? (
+          <div style={{ padding: 20, textAlign: "center", color: "#888", fontSize: 12, border: "1px dashed #ccc" }}>
+            No remittances logged yet.
+          </div>
+        ) : (
+          <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 11 }}>
+            <thead>
+              <tr>
+                {["S/N", "Contract", "Contract Value (USD)", "1% Due (USD)", "Remitted (USD)", "Status", "Reference", "Date"].map((h) => (
+                  <th key={h} style={{ border: "1px solid #999", padding: "6px 8px", background: "#F1F1F1", textAlign: "left", fontWeight: 700 }}>{h}</th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {ncdf.remittances.map((r, i) => {
+                const due = r.contractValueUsd * 0.01;
+                const short = r.amountRemitted < due;
+                return (
+                  <tr key={r.id}>
+                    <td style={{ border: "1px solid #999", padding: "6px 8px" }}>{i + 1}</td>
+                    <td style={{ border: "1px solid #999", padding: "6px 8px" }}>{r.contractDescription}</td>
+                    <td style={{ border: "1px solid #999", padding: "6px 8px" }}>${Number(r.contractValueUsd).toLocaleString()}</td>
+                    <td style={{ border: "1px solid #999", padding: "6px 8px" }}>${due.toLocaleString()}</td>
+                    <td style={{ border: "1px solid #999", padding: "6px 8px" }}>${Number(r.amountRemitted).toLocaleString()}</td>
+                    <td style={{ border: "1px solid #999", padding: "6px 8px" }}>{short ? "Short-paid" : "Fully remitted"}</td>
+                    <td style={{ border: "1px solid #999", padding: "6px 8px" }}>{r.reference || "—"}</td>
+                    <td style={{ border: "1px solid #999", padding: "6px 8px" }}>{r.date}</td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        )}
+      </NCDMBDocShell>
     </div>
   );
 }
@@ -2033,44 +2217,86 @@ function AnnualReportView({ data }) {
         </span>
       </div>
 
-      <div id="printable" style={{ background: "#1A2028", border: "1px solid #2E3742",
-        borderRadius: 10, padding: 32, maxWidth: 760 }}>
-        <div style={{ borderBottom: "1px solid #2E3742", paddingBottom: 16, marginBottom: 20 }}>
-          <div style={{ fontFamily: "Oswald, sans-serif", fontSize: 18, color: "#EDEFF2",
-            textTransform: "uppercase", letterSpacing: 1 }}>{data.name}</div>
-          <div style={{ fontSize: 12, color: "#8D97A3", marginTop: 4 }}>
-            Project Progress Performance Report — NOGICD Act §60 · {year} · generated {today}
-          </div>
+      <NCDMBDocShell title={"NC PERFORMANCE REPORT (2025)\nProject Progress Performance Report — Section 60"}
+        companyName={data.name}
+        meta={<div><strong>Reporting Year:</strong> {year}</div>}
+        docLabel={`Generated ${today}`}
+      >
+        <div style={{ fontSize: 12, fontWeight: 700, background: "#F1F1F1", padding: "6px 10px", marginTop: 4, marginBottom: 8 }}>
+          1. Nigerian Content Position
         </div>
+        <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 11, marginBottom: 16 }}>
+          <tbody>
+            <tr><td style={{ border: "1px solid #999", padding: "6px 8px", width: "60%" }}>Nigerian Content achieved</td>
+              <td style={{ border: "1px solid #999", padding: "6px 8px" }}>{pct.toFixed(1)}% (target {data.target}%)</td></tr>
+            <tr><td style={{ border: "1px solid #999", padding: "6px 8px" }}>Local spend</td>
+              <td style={{ border: "1px solid #999", padding: "6px 8px" }}>{fmtNaira(local)}</td></tr>
+            <tr><td style={{ border: "1px solid #999", padding: "6px 8px" }}>Foreign spend</td>
+              <td style={{ border: "1px solid #999", padding: "6px 8px" }}>{fmtNaira(foreign)}</td></tr>
+          </tbody>
+        </table>
 
-        <PlanSectionTitle>1. Nigerian Content position</PlanSectionTitle>
-        <PlanRow label="Nigerian Content achieved" value={`${pct.toFixed(1)}% (target ${data.target}%)`} />
-        <PlanRow label="Local spend" value={fmtNaira(local)} />
-        <PlanRow label="Foreign spend" value={fmtNaira(foreign)} last />
-
-        <PlanSectionTitle>2. Spend by category</PlanSectionTitle>
-        <PlanTable headers={["Category", "Amount"]}
-          rows={CATS.map((c) => [c.label, fmtNaira(totals[c.id])])} />
-
-        <PlanSectionTitle>3. Contracts, subcontracts & purchase orders</PlanSectionTitle>
-        <PlanRow label="Job Forecast value (§18, ≥$1M)" value={"$" + forecastTotal.toLocaleString()} />
-        <PlanRow label="Procurement value (§24, <$1M)" value={"$" + procurementTotal.toLocaleString()} />
-        <PlanRow label="Total contracts logged for the year" value={String(yearContracts.length)} last />
-
-        <PlanSectionTitle>4. Expatriate quota & localisation</PlanSectionTitle>
-        <PlanRow label="Total approved expatriate slots" value={String(totalApproved)} />
-        <PlanRow label="Nigerian understudies assigned" value={String(totalLocalised)}
-          last />
-
-        <PlanSectionTitle>5. Carbon intensity</PlanSectionTitle>
-        <PlanRow label="Estimated total emissions"
-          value={`${(totalCo2e / 1000).toLocaleString(undefined, { maximumFractionDigits: 2 })} t CO2e`} last />
-
-        <div style={{ fontSize: 11, color: "#5B6470", marginTop: 20 }}>
-          Prepared for internal review ahead of NCDMB submission. Cross-check against the current
-          official §60 NC Performance Report template before formal submission.
+        <div style={{ fontSize: 12, fontWeight: 700, background: "#F1F1F1", padding: "6px 10px", marginBottom: 8 }}>
+          2. Spend by Category
         </div>
-      </div>
+        <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 11, marginBottom: 16 }}>
+          <thead><tr>
+            <th style={{ border: "1px solid #999", padding: "6px 8px", background: "#F1F1F1", textAlign: "left" }}>Category</th>
+            <th style={{ border: "1px solid #999", padding: "6px 8px", background: "#F1F1F1", textAlign: "left" }}>Amount</th>
+          </tr></thead>
+          <tbody>
+            {CATS.map((c) => (
+              <tr key={c.id}>
+                <td style={{ border: "1px solid #999", padding: "6px 8px" }}>{c.label}</td>
+                <td style={{ border: "1px solid #999", padding: "6px 8px" }}>{fmtNaira(totals[c.id])}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+
+        <div style={{ fontSize: 12, fontWeight: 700, background: "#F1F1F1", padding: "6px 10px", marginBottom: 8 }}>
+          3. Contracts, Subcontracts & Purchase Orders
+        </div>
+        <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 11, marginBottom: 16 }}>
+          <tbody>
+            <tr><td style={{ border: "1px solid #999", padding: "6px 8px", width: "60%" }}>Job Forecast value (§18, ≥$1M)</td>
+              <td style={{ border: "1px solid #999", padding: "6px 8px" }}>${forecastTotal.toLocaleString()}</td></tr>
+            <tr><td style={{ border: "1px solid #999", padding: "6px 8px" }}>Procurement value (§24, &lt;$1M)</td>
+              <td style={{ border: "1px solid #999", padding: "6px 8px" }}>${procurementTotal.toLocaleString()}</td></tr>
+            <tr><td style={{ border: "1px solid #999", padding: "6px 8px" }}>Total contracts logged for the year</td>
+              <td style={{ border: "1px solid #999", padding: "6px 8px" }}>{yearContracts.length}</td></tr>
+          </tbody>
+        </table>
+
+        <div style={{ fontSize: 12, fontWeight: 700, background: "#F1F1F1", padding: "6px 10px", marginBottom: 8 }}>
+          4. Expatriate Quota & Localisation
+        </div>
+        <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 11, marginBottom: 16 }}>
+          <tbody>
+            <tr><td style={{ border: "1px solid #999", padding: "6px 8px", width: "60%" }}>Total approved expatriate slots</td>
+              <td style={{ border: "1px solid #999", padding: "6px 8px" }}>{totalApproved}</td></tr>
+            <tr><td style={{ border: "1px solid #999", padding: "6px 8px" }}>Nigerian understudies assigned</td>
+              <td style={{ border: "1px solid #999", padding: "6px 8px" }}>{totalLocalised}</td></tr>
+          </tbody>
+        </table>
+
+        <div style={{ fontSize: 12, fontWeight: 700, background: "#F1F1F1", padding: "6px 10px", marginBottom: 8 }}>
+          5. Carbon Intensity
+        </div>
+        <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 11 }}>
+          <tbody>
+            <tr><td style={{ border: "1px solid #999", padding: "6px 8px", width: "60%" }}>Estimated total emissions</td>
+              <td style={{ border: "1px solid #999", padding: "6px 8px" }}>
+                {(totalCo2e / 1000).toLocaleString(undefined, { maximumFractionDigits: 2 })} t CO2e</td></tr>
+          </tbody>
+        </table>
+
+        <div style={{ fontSize: 10, color: "#666", marginTop: 14 }}>
+          Note: this is a compiled summary. NCDMB's full NC Performance workbook includes 18+ additional
+          detail sheets (NC Schedule, Plan-NCCC, per-category breakdowns) beyond this summary view — a
+          fuller sheet-by-sheet version is planned as a follow-up.
+        </div>
+      </NCDMBDocShell>
     </div>
   );
 }
@@ -2380,6 +2606,140 @@ function OtherStatutoryView({ data, setData }) {
             ))}
           </div>
         </>
+      )}
+
+      <div className="no-print" style={{ margin: "20px 0" }}>
+        <button onClick={() => window.print()} style={btnPrimary}>
+          <FileText size={14} /> Print / save as PDF
+        </button>
+      </div>
+
+      {tab === "training" && (
+        <NCDMBDocShell title={"EMPLOYMENT & TRAINING PLAN AND REPORT\n(Section 29)"} companyName={data.name}
+          meta={<div><strong>Plan summary:</strong> {os.employmentTrainingPlan || "Not yet completed"}</div>}
+          docLabel={`Generated ${new Date().toLocaleDateString("en-NG", { year: "numeric", month: "long", day: "numeric" })}`}>
+          {os.trainingLog.length === 0 ? (
+            <div style={{ padding: 20, textAlign: "center", color: "#888", fontSize: 12, border: "1px dashed #ccc" }}>No training programs logged yet.</div>
+          ) : (
+            <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 11 }}>
+              <thead><tr>{["S/N", "Training Program", "Total Participants", "Nigerian Participants", "Date"].map((h) => (
+                <th key={h} style={{ border: "1px solid #999", padding: "6px 8px", background: "#F1F1F1", textAlign: "left", fontWeight: 700 }}>{h}</th>))}</tr></thead>
+              <tbody>{os.trainingLog.map((r, i) => (
+                <tr key={r.id}>
+                  <td style={{ border: "1px solid #999", padding: "6px 8px" }}>{i + 1}</td>
+                  <td style={{ border: "1px solid #999", padding: "6px 8px" }}>{r.program}</td>
+                  <td style={{ border: "1px solid #999", padding: "6px 8px" }}>{r.participants}</td>
+                  <td style={{ border: "1px solid #999", padding: "6px 8px" }}>{r.nigerianParticipants}</td>
+                  <td style={{ border: "1px solid #999", padding: "6px 8px" }}>{r.date}</td>
+                </tr>))}</tbody>
+            </table>
+          )}
+        </NCDMBDocShell>
+      )}
+
+      {tab === "rnd" && (
+        <NCDMBDocShell title={"RESEARCH & DEVELOPMENT PLAN AND REPORT\n(Sections 38 & 39)"} companyName={data.name}
+          meta={<div><strong>Plan summary:</strong> {os.rndPlan || "Not yet completed"}</div>}
+          docLabel={`Generated ${new Date().toLocaleDateString("en-NG", { year: "numeric", month: "long", day: "numeric" })}`}>
+          {os.rndLog.length === 0 ? (
+            <div style={{ padding: 20, textAlign: "center", color: "#888", fontSize: 12, border: "1px dashed #ccc" }}>No R&D initiatives logged yet.</div>
+          ) : (
+            <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 11 }}>
+              <thead><tr>{["S/N", "Initiative", "Budget (USD)", "Status"].map((h) => (
+                <th key={h} style={{ border: "1px solid #999", padding: "6px 8px", background: "#F1F1F1", textAlign: "left", fontWeight: 700 }}>{h}</th>))}</tr></thead>
+              <tbody>{os.rndLog.map((r, i) => (
+                <tr key={r.id}>
+                  <td style={{ border: "1px solid #999", padding: "6px 8px" }}>{i + 1}</td>
+                  <td style={{ border: "1px solid #999", padding: "6px 8px" }}>{r.initiative}</td>
+                  <td style={{ border: "1px solid #999", padding: "6px 8px" }}>${Number(r.budgetUsd).toLocaleString()}</td>
+                  <td style={{ border: "1px solid #999", padding: "6px 8px" }}>{r.status}</td>
+                </tr>))}</tbody>
+            </table>
+          )}
+        </NCDMBDocShell>
+      )}
+
+      {tab === "tech" && (
+        <NCDMBDocShell title={"OPERATORS/COMPANY TECHNOLOGY TRANSFER PLAN AND REPORT\n(Sections 44 & 46)"} companyName={data.name}
+          meta={<div><strong>Plan summary:</strong> {os.techTransferPlan || "Not yet completed"}</div>}
+          docLabel={`Generated ${new Date().toLocaleDateString("en-NG", { year: "numeric", month: "long", day: "numeric" })}`}>
+          <div style={{ fontSize: 11, fontWeight: 700, marginBottom: 8 }}>1. Description of Technology Transfer Initiative</div>
+          <div style={{ fontSize: 11, marginBottom: 14, minHeight: 20 }}>{os.techTransferPlan || "—"}</div>
+          <div style={{ fontSize: 11, fontWeight: 700, marginBottom: 8 }}>2. Milestones to be Achieved / Transfer Status</div>
+          {os.techTransferLog.length === 0 ? (
+            <div style={{ padding: 20, textAlign: "center", color: "#888", fontSize: 12, border: "1px dashed #ccc" }}>No technology transfer agreements logged yet.</div>
+          ) : (
+            <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 11 }}>
+              <thead><tr>{["S/N", "Transfer Partner", "Technology / Know-how", "Status"].map((h) => (
+                <th key={h} style={{ border: "1px solid #999", padding: "6px 8px", background: "#F1F1F1", textAlign: "left", fontWeight: 700 }}>{h}</th>))}</tr></thead>
+              <tbody>{os.techTransferLog.map((r, i) => (
+                <tr key={r.id}>
+                  <td style={{ border: "1px solid #999", padding: "6px 8px" }}>{i + 1}</td>
+                  <td style={{ border: "1px solid #999", padding: "6px 8px" }}>{r.partner}</td>
+                  <td style={{ border: "1px solid #999", padding: "6px 8px" }}>{r.technology}</td>
+                  <td style={{ border: "1px solid #999", padding: "6px 8px" }}>{r.status}</td>
+                </tr>))}</tbody>
+            </table>
+          )}
+        </NCDMBDocShell>
+      )}
+
+      {tab === "services" && (
+        <NCDMBDocShell title={"LEGAL, INSURANCE & FINANCIAL SERVICES REPORT\n(Sections 49, 51 & 52 — Bi-annual)"} companyName={data.name}
+          meta={<div>Summary of Nigerian legal, insurance, and financial service providers retained.</div>}
+          docLabel={`Generated ${new Date().toLocaleDateString("en-NG", { year: "numeric", month: "long", day: "numeric" })}`}>
+          <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 11 }}>
+            <thead><tr>{["Category", "Provider", "Notes"].map((h) => (
+              <th key={h} style={{ border: "1px solid #999", padding: "6px 8px", background: "#F1F1F1", textAlign: "left", fontWeight: 700 }}>{h}</th>))}</tr></thead>
+            <tbody>
+              <tr>
+                <td style={{ border: "1px solid #999", padding: "6px 8px", fontWeight: 700 }}>Legal Services (§51)</td>
+                <td style={{ border: "1px solid #999", padding: "6px 8px" }}>{legal.firm || "—"}</td>
+                <td style={{ border: "1px solid #999", padding: "6px 8px" }}>{legal.notes || "—"}</td>
+              </tr>
+              <tr>
+                <td style={{ border: "1px solid #999", padding: "6px 8px", fontWeight: 700 }}>Insurance Services (§49)</td>
+                <td style={{ border: "1px solid #999", padding: "6px 8px" }}>{insurance.provider || "—"}</td>
+                <td style={{ border: "1px solid #999", padding: "6px 8px" }}>{insurance.notes || "—"}</td>
+              </tr>
+              <tr>
+                <td style={{ border: "1px solid #999", padding: "6px 8px", fontWeight: 700 }}>Financial Services (§52)</td>
+                <td style={{ border: "1px solid #999", padding: "6px 8px" }}>{financial.institution || "—"}</td>
+                <td style={{ border: "1px solid #999", padding: "6px 8px" }}>
+                  {financial.revenueRetentionPct ? `${financial.revenueRetentionPct}% Nigerian revenue retained locally` : "—"}
+                </td>
+              </tr>
+            </tbody>
+          </table>
+          <div style={{ fontSize: 10, color: "#666", marginTop: 14 }}>
+            Note: this is a summary printout. The full official templates for these three reports break each
+            category into detailed provider-by-provider tables across a "past six months / forecast / budget"
+            three-part structure — a more detailed version of this printout is planned as a follow-up.
+          </div>
+        </NCDMBDocShell>
+      )}
+
+      {tab === "succession" && (
+        <NCDMBDocShell title={"SUCCESSION PLAN TEMPLATE\n(Section 33 — Per Expatriate)"} companyName={data.name}
+          meta={<div>Understudy progress for approved expatriate positions.</div>}
+          docLabel={`Generated ${new Date().toLocaleDateString("en-NG", { year: "numeric", month: "long", day: "numeric" })}`}>
+          {os.successionPlans.length === 0 ? (
+            <div style={{ padding: 20, textAlign: "center", color: "#888", fontSize: 12, border: "1px dashed #ccc" }}>No succession plans logged yet.</div>
+          ) : (
+            <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 11 }}>
+              <thead><tr>{["S/N", "Expatriate Role", "Nigerian Understudy", "Target Handover Date", "Progress %"].map((h) => (
+                <th key={h} style={{ border: "1px solid #999", padding: "6px 8px", background: "#F1F1F1", textAlign: "left", fontWeight: 700 }}>{h}</th>))}</tr></thead>
+              <tbody>{os.successionPlans.map((r, i) => (
+                <tr key={r.id}>
+                  <td style={{ border: "1px solid #999", padding: "6px 8px" }}>{i + 1}</td>
+                  <td style={{ border: "1px solid #999", padding: "6px 8px" }}>{r.expatRole}</td>
+                  <td style={{ border: "1px solid #999", padding: "6px 8px" }}>{r.understudyName || "—"}</td>
+                  <td style={{ border: "1px solid #999", padding: "6px 8px" }}>{r.targetDate || "—"}</td>
+                  <td style={{ border: "1px solid #999", padding: "6px 8px" }}>{r.progressPct}%</td>
+                </tr>))}</tbody>
+            </table>
+          )}
+        </NCDMBDocShell>
       )}
     </div>
   );
