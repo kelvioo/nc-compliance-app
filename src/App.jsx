@@ -335,10 +335,20 @@ function Sidebar({ view, setView, company, onLogout, onRefresh, refreshing }) {
   const items = [
     { id: "dashboard", label: "Dashboard", icon: Gauge },
     { id: "ncplan", label: "NC Plan", icon: Layers },
-    { id: "quarterly", label: "Quarterly compliance", icon: CalendarClock },
-    { id: "ncdf", label: "NCDF & NCFCC", icon: ShieldCheck },
-    { id: "annual", label: "Annual report (§60)", icon: TrendingUp },
-    { id: "other", label: "Other statutory reports", icon: ClipboardList },
+    { id: "annual", label: "1. NC Performance Report (§60)", icon: TrendingUp },
+    { id: "forecast", label: "2. Job Forecast (§18)", icon: FileText },
+    { id: "procServices", label: "3. Procurement — Services (§24)", icon: FileText },
+    { id: "procMaterials", label: "4. Procurement — Materials (§24)", icon: FileText },
+    { id: "marine", label: "5. Marine Services Utilization (§24)", icon: Ship },
+    { id: "insurance", label: "6. Insurance Report (§49)", icon: ShieldCheck },
+    { id: "legal", label: "7. Legal Services (§51)", icon: ShieldCheck },
+    { id: "financial", label: "8. Financial Services (§52)", icon: ShieldCheck },
+    { id: "training", label: "9–10. Employment & Training (§29)", icon: Users },
+    { id: "rnd", label: "11–12. R&D (§38/39)", icon: TrendingUp },
+    { id: "succession", label: "13. Succession Plan (§33)", icon: ClipboardList },
+    { id: "tech", label: "14–15. Technology Transfer (§44/46)", icon: Package },
+    { id: "calendar", label: "Compliance calendar", icon: CalendarClock },
+    { id: "ncdf", label: "NCDF & NCFCC (§104)", icon: ShieldCheck },
     { id: "entries", label: "Spend log", icon: ClipboardList },
     { id: "quota", label: "Expat quota", icon: Users },
     { id: "carbon", label: "Carbon intensity", icon: Leaf },
@@ -1386,10 +1396,10 @@ function ComplianceCalendar() {
   );
 }
 
-function QuarterlyReportsView({ data, setData }) {
+function QuarterlyReportsView({ data, setData, lockTab }) {
   const contracts = data.contracts || [];
   const marineServices = data.marineServices || [];
-  const [tab, setTab] = useState("calendar");
+  const [tab, setTab] = useState(lockTab === "marine" ? "marine" : (lockTab ? "register" : "calendar"));
   const [regAddress, setRegAddress] = useState(data.registeredAddress || "");
   const [form, setForm] = useState({
     description: "", contractor: "", category: CONTRACT_CATEGORIES[0], nature: CONTRACT_NATURE[0],
@@ -1408,7 +1418,7 @@ function QuarterlyReportsView({ data, setData }) {
     quarter: getQuarterOptions()[0].id,
   });
   const [reportQuarter, setReportQuarter] = useState(getQuarterOptions()[0].id);
-  const [reportType, setReportType] = useState("forecast");
+  const [reportType, setReportType] = useState(lockTab || "forecast");
 
   const addContract = async (e) => {
     e.preventDefault();
@@ -1485,23 +1495,38 @@ function QuarterlyReportsView({ data, setData }) {
     { id: "marine", label: "Marine services register", icon: Ship },
     { id: "report", label: "Generate report", icon: FileText },
   ];
+  const LOCK_TITLES = {
+    forecast: "Job Forecast Report (§18)",
+    procMaterials: "Procurement Report — Materials (§24)",
+    procServices: "Procurement Report — Services (§24)",
+    marine: "Marine Services Utilization Report (§24)",
+  };
+  const calendarVisible = tab === "calendar" && !lockTab;
+  const registerVisible = tab === "register" || (lockTab && lockTab !== "marine");
+  const marineVisible = tab === "marine" || lockTab === "marine";
+  const reportVisible = tab === "report" || !!lockTab;
 
   return (
     <div style={{ padding: 28, fontFamily: "IBM Plex Sans, sans-serif" }} className="nc-main-content">
       <h1 style={{ fontFamily: "Oswald, sans-serif", textTransform: "uppercase", letterSpacing: 1,
-        fontSize: 20, color: "#EDEFF2", margin: "0 0 4px" }}>Quarterly compliance</h1>
+        fontSize: 20, color: "#EDEFF2", margin: "0 0 4px" }}>
+        {lockTab ? LOCK_TITLES[lockTab] : "Quarterly compliance"}
+      </h1>
       <p style={{ color: "#8D97A3", fontSize: 13, margin: "0 0 20px" }}>
-        Every statutory NCDMB deadline in one place, plus the Job Forecast (§18), Procurement (§24 —
-        Materials & Services), and Marine Services Utilization (§24) report generators.
+        {lockTab
+          ? "Enter your data below, then print or save this report exactly as NCDMB expects it."
+          : "Every statutory NCDMB deadline in one place, plus the Job Forecast (§18), Procurement (§24 — Materials & Services), and Marine Services Utilization (§24) report generators."}
       </p>
 
-      <div className="no-print" style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 22 }}>
-        {tabs.map((t) => (
-          <NCPlanTab key={t.id} active={tab === t.id} onClick={() => setTab(t.id)} icon={t.icon} label={t.label} />
-        ))}
-      </div>
+      {!lockTab && (
+        <div className="no-print" style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 22 }}>
+          {tabs.map((t) => (
+            <NCPlanTab key={t.id} active={tab === t.id} onClick={() => setTab(t.id)} icon={t.icon} label={t.label} />
+          ))}
+        </div>
+      )}
 
-      {tab === "calendar" && (
+      {calendarVisible && (
         <>
           <ComplianceCalendar />
           <div style={{ fontSize: 11, color: "#5B6470", marginTop: 14, maxWidth: 640 }}>
@@ -1513,7 +1538,7 @@ function QuarterlyReportsView({ data, setData }) {
         </>
       )}
 
-      {tab === "register" && (
+      {registerVisible && (
         <>
           <form onSubmit={addContract} style={{
             background: "#1A2028", border: "1px solid #2E3742", borderRadius: 10,
@@ -1746,7 +1771,7 @@ function QuarterlyReportsView({ data, setData }) {
         </>
       )}
 
-      {tab === "marine" && (
+      {marineVisible && (
         <>
           <form onSubmit={addMarine} style={{
             background: "#1A2028", border: "1px solid #2E3742", borderRadius: 10,
@@ -1906,8 +1931,9 @@ function QuarterlyReportsView({ data, setData }) {
         </>
       )}
 
-      {tab === "report" && (
+      {reportVisible && (
         <>
+          {lockTab && <div style={{ fontSize: 11, color: "#8D97A3", textTransform: "uppercase", letterSpacing: 0.5, margin: "22px 0 8px" }}>Generate & print</div>}
           <div className="no-print" style={{ display: "flex", gap: 12, alignItems: "end",
             marginBottom: 20, flexWrap: "wrap" }}>
             <Field label="Quarter">
@@ -1915,11 +1941,13 @@ function QuarterlyReportsView({ data, setData }) {
                 {quarters.map((q) => <option key={q.id} value={q.id}>{q.quarterLabel} ({q.rangeLabel})</option>)}
               </select>
             </Field>
-            <Field label="Report type">
-              <select style={inputStyle} value={reportType} onChange={(e) => setReportType(e.target.value)}>
-                {Object.entries(REPORT_TYPES).map(([key, r]) => <option key={key} value={key}>{r.label}</option>)}
-              </select>
-            </Field>
+            {!lockTab && (
+              <Field label="Report type">
+                <select style={inputStyle} value={reportType} onChange={(e) => setReportType(e.target.value)}>
+                  {Object.entries(REPORT_TYPES).map(([key, r]) => <option key={key} value={key}>{r.label}</option>)}
+                </select>
+              </Field>
+            )}
             <button onClick={() => window.print()} style={btnPrimary}>
               <FileText size={14} /> Print / save as PDF
             </button>
@@ -2304,7 +2332,7 @@ function AnnualReportView({ data }) {
 // Sections 29, 33, 38/39, and 44/46: the remaining statutory obligations —
 // Employment & Training, Research & Development, Technology Transfer,
 // Legal/Insurance/Financial Services, and per-expatriate Succession Plans.
-function OtherStatutoryView({ data, setData }) {
+function OtherStatutoryView({ data, setData, lockTab }) {
   const os = data.otherStatutory || {
     employmentTrainingPlan: "", trainingLog: [],
     rndPlan: "", rndLog: [],
@@ -2312,7 +2340,7 @@ function OtherStatutoryView({ data, setData }) {
     legalServices: {}, insuranceServices: {}, financialServices: {},
     successionPlans: [],
   };
-  const [tab, setTab] = useState("training");
+  const [tab, setTab] = useState(lockTab || "training");
   const patch = (p) => setData({ ...data, otherStatutory: { ...os, ...p } });
 
   const [trainingPlan, setTrainingPlan] = useState(os.employmentTrainingPlan);
@@ -2365,24 +2393,32 @@ function OtherStatutoryView({ data, setData }) {
     { id: "training", label: "Employment & training (§29)", icon: Users },
     { id: "rnd", label: "R&D (§38/39)", icon: TrendingUp },
     { id: "tech", label: "Technology transfer (§44/46)", icon: Package },
-    { id: "services", label: "Legal / insurance / financial (§49/51/52)", icon: ShieldCheck },
+    { id: "insurance", label: "Insurance services (§49)", icon: ShieldCheck },
+    { id: "legal", label: "Legal services (§51)", icon: ShieldCheck },
+    { id: "financial", label: "Financial services (§52)", icon: ShieldCheck },
     { id: "succession", label: "Succession plans (§33)", icon: ClipboardList },
   ];
+  const visibleTabs = lockTab ? tabs.filter((t) => t.id === lockTab) : tabs;
 
   return (
     <div style={{ padding: 28, fontFamily: "IBM Plex Sans, sans-serif" }} className="nc-main-content">
       <h1 style={{ fontFamily: "Oswald, sans-serif", textTransform: "uppercase", letterSpacing: 1,
-        fontSize: 20, color: "#EDEFF2", margin: "0 0 4px" }}>Other statutory reports</h1>
+        fontSize: 20, color: "#EDEFF2", margin: "0 0 4px" }}>
+        {lockTab ? tabs.find((t) => t.id === lockTab)?.label : "Other statutory reports"}
+      </h1>
       <p style={{ color: "#8D97A3", fontSize: 13, margin: "0 0 20px", maxWidth: 640 }}>
-        The remaining NOGICD Act obligations beyond NC%, spend, and quarterly contracts — tracked here
-        so nothing on NCDMB's statutory list is left unaccounted for.
+        {lockTab
+          ? "Enter your data below, then print or save this report exactly as NCDMB expects it."
+          : "The remaining NOGICD Act obligations beyond NC%, spend, and quarterly contracts — tracked here so nothing on NCDMB's statutory list is left unaccounted for."}
       </p>
 
-      <div className="no-print" style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 22 }}>
-        {tabs.map((t) => (
-          <NCPlanTab key={t.id} active={tab === t.id} onClick={() => setTab(t.id)} icon={t.icon} label={t.label} />
-        ))}
-      </div>
+      {!lockTab && (
+        <div className="no-print" style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 22 }}>
+          {visibleTabs.map((t) => (
+            <NCPlanTab key={t.id} active={tab === t.id} onClick={() => setTab(t.id)} icon={t.icon} label={t.label} />
+          ))}
+        </div>
+      )}
 
       {tab === "training" && (
         <>
@@ -2501,7 +2537,7 @@ function OtherStatutoryView({ data, setData }) {
         </>
       )}
 
-      {tab === "services" && (
+      {tab === "legal" && (
         <div style={{ display: "flex", flexDirection: "column", gap: 16, maxWidth: 560 }}>
           <div style={{ background: "#1A2028", border: "1px solid #2E3742", borderRadius: 10, padding: 16 }}>
             <div style={{ fontFamily: "Oswald, sans-serif", fontSize: 13, color: "#EDEFF2",
@@ -2517,6 +2553,15 @@ function OtherStatutoryView({ data, setData }) {
               </Field>
             </div>
           </div>
+          <div style={{ fontSize: 11, color: "#5B6470" }}>
+            Submitted bi-annually. NCDMB's page doesn't state the exact within-period due date —
+            confirm the current cut-off with NCDMB or your NOGIC JQS account.
+          </div>
+        </div>
+      )}
+
+      {tab === "insurance" && (
+        <div style={{ display: "flex", flexDirection: "column", gap: 16, maxWidth: 560 }}>
           <div style={{ background: "#1A2028", border: "1px solid #2E3742", borderRadius: 10, padding: 16 }}>
             <div style={{ fontFamily: "Oswald, sans-serif", fontSize: 13, color: "#EDEFF2",
               textTransform: "uppercase", letterSpacing: 1, marginBottom: 12 }}>Insurance services (§49)</div>
@@ -2531,6 +2576,15 @@ function OtherStatutoryView({ data, setData }) {
               </Field>
             </div>
           </div>
+          <div style={{ fontSize: 11, color: "#5B6470" }}>
+            Submitted bi-annually. NCDMB's page doesn't state the exact within-period due date —
+            confirm the current cut-off with NCDMB or your NOGIC JQS account.
+          </div>
+        </div>
+      )}
+
+      {tab === "financial" && (
+        <div style={{ display: "flex", flexDirection: "column", gap: 16, maxWidth: 560 }}>
           <div style={{ background: "#1A2028", border: "1px solid #2E3742", borderRadius: 10, padding: 16 }}>
             <div style={{ fontFamily: "Oswald, sans-serif", fontSize: 13, color: "#EDEFF2",
               textTransform: "uppercase", letterSpacing: 1, marginBottom: 12 }}>Financial services (§52)</div>
@@ -2547,8 +2601,8 @@ function OtherStatutoryView({ data, setData }) {
             </div>
           </div>
           <div style={{ fontSize: 11, color: "#5B6470" }}>
-            These three are submitted bi-annually. NCDMB's page doesn't state the exact within-period
-            due date, so confirm the current cut-off with NCDMB or your NOGIC JQS account.
+            Submitted bi-annually. NCDMB's page doesn't state the exact within-period due date —
+            confirm the current cut-off with NCDMB or your NOGIC JQS account.
           </div>
         </div>
       )}
@@ -2684,37 +2738,69 @@ function OtherStatutoryView({ data, setData }) {
         </NCDMBDocShell>
       )}
 
-      {tab === "services" && (
-        <NCDMBDocShell title={"LEGAL, INSURANCE & FINANCIAL SERVICES REPORT\n(Sections 49, 51 & 52 — Bi-annual)"} companyName={data.name}
-          meta={<div>Summary of Nigerian legal, insurance, and financial service providers retained.</div>}
+      {tab === "legal" && (
+        <NCDMBDocShell title={"LEGAL SERVICES REPORT\n(Section 51 — Bi-annual)"} companyName={data.name}
+          meta={<div><strong>Nigerian law firm retained:</strong> {legal.firm || "—"}</div>}
           docLabel={`Generated ${new Date().toLocaleDateString("en-NG", { year: "numeric", month: "long", day: "numeric" })}`}>
           <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 11 }}>
-            <thead><tr>{["Category", "Provider", "Notes"].map((h) => (
+            <thead><tr>{["Field", "Details"].map((h) => (
               <th key={h} style={{ border: "1px solid #999", padding: "6px 8px", background: "#F1F1F1", textAlign: "left", fontWeight: 700 }}>{h}</th>))}</tr></thead>
             <tbody>
-              <tr>
-                <td style={{ border: "1px solid #999", padding: "6px 8px", fontWeight: 700 }}>Legal Services (§51)</td>
-                <td style={{ border: "1px solid #999", padding: "6px 8px" }}>{legal.firm || "—"}</td>
-                <td style={{ border: "1px solid #999", padding: "6px 8px" }}>{legal.notes || "—"}</td>
-              </tr>
-              <tr>
-                <td style={{ border: "1px solid #999", padding: "6px 8px", fontWeight: 700 }}>Insurance Services (§49)</td>
-                <td style={{ border: "1px solid #999", padding: "6px 8px" }}>{insurance.provider || "—"}</td>
-                <td style={{ border: "1px solid #999", padding: "6px 8px" }}>{insurance.notes || "—"}</td>
-              </tr>
-              <tr>
-                <td style={{ border: "1px solid #999", padding: "6px 8px", fontWeight: 700 }}>Financial Services (§52)</td>
-                <td style={{ border: "1px solid #999", padding: "6px 8px" }}>{financial.institution || "—"}</td>
-                <td style={{ border: "1px solid #999", padding: "6px 8px" }}>
-                  {financial.revenueRetentionPct ? `${financial.revenueRetentionPct}% Nigerian revenue retained locally` : "—"}
-                </td>
-              </tr>
+              <tr><td style={{ border: "1px solid #999", padding: "6px 8px", fontWeight: 700, width: "35%" }}>Nigerian law firm retained</td>
+                <td style={{ border: "1px solid #999", padding: "6px 8px" }}>{legal.firm || "—"}</td></tr>
+              <tr><td style={{ border: "1px solid #999", padding: "6px 8px", fontWeight: 700 }}>Notes</td>
+                <td style={{ border: "1px solid #999", padding: "6px 8px" }}>{legal.notes || "—"}</td></tr>
             </tbody>
           </table>
           <div style={{ fontSize: 10, color: "#666", marginTop: 14 }}>
-            Note: this is a summary printout. The full official templates for these three reports break each
-            category into detailed provider-by-provider tables across a "past six months / forecast / budget"
-            three-part structure — a more detailed version of this printout is planned as a follow-up.
+            Note: this is a summary printout. NCDMB's full official Legal Services template breaks this into
+            16 individual service categories across a "past six months / forecast / budget" three-part
+            structure — a more detailed version of this printout is planned as a follow-up.
+          </div>
+        </NCDMBDocShell>
+      )}
+
+      {tab === "insurance" && (
+        <NCDMBDocShell title={"INSURANCE SERVICES REPORT\n(Section 49 — Bi-annual)"} companyName={data.name}
+          meta={<div><strong>Nigerian insurer / broker used:</strong> {insurance.provider || "—"}</div>}
+          docLabel={`Generated ${new Date().toLocaleDateString("en-NG", { year: "numeric", month: "long", day: "numeric" })}`}>
+          <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 11 }}>
+            <thead><tr>{["Field", "Details"].map((h) => (
+              <th key={h} style={{ border: "1px solid #999", padding: "6px 8px", background: "#F1F1F1", textAlign: "left", fontWeight: 700 }}>{h}</th>))}</tr></thead>
+            <tbody>
+              <tr><td style={{ border: "1px solid #999", padding: "6px 8px", fontWeight: 700, width: "35%" }}>Nigerian insurer / broker used</td>
+                <td style={{ border: "1px solid #999", padding: "6px 8px" }}>{insurance.provider || "—"}</td></tr>
+              <tr><td style={{ border: "1px solid #999", padding: "6px 8px", fontWeight: 700 }}>Notes</td>
+                <td style={{ border: "1px solid #999", padding: "6px 8px" }}>{insurance.notes || "—"}</td></tr>
+            </tbody>
+          </table>
+          <div style={{ fontSize: 10, color: "#666", marginTop: 14 }}>
+            Note: this is a summary printout. NCDMB's full official Insurance Services template breaks this
+            into detailed provider-by-provider tables across a three-part reporting structure — a more
+            detailed version of this printout is planned as a follow-up.
+          </div>
+        </NCDMBDocShell>
+      )}
+
+      {tab === "financial" && (
+        <NCDMBDocShell title={"FINANCIAL SERVICES REPORT\n(Section 52 — Bi-annual)"} companyName={data.name}
+          meta={<div><strong>Nigerian financial institution:</strong> {financial.institution || "—"}</div>}
+          docLabel={`Generated ${new Date().toLocaleDateString("en-NG", { year: "numeric", month: "long", day: "numeric" })}`}>
+          <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 11 }}>
+            <thead><tr>{["Field", "Details"].map((h) => (
+              <th key={h} style={{ border: "1px solid #999", padding: "6px 8px", background: "#F1F1F1", textAlign: "left", fontWeight: 700 }}>{h}</th>))}</tr></thead>
+            <tbody>
+              <tr><td style={{ border: "1px solid #999", padding: "6px 8px", fontWeight: 700, width: "35%" }}>Nigerian financial institution</td>
+                <td style={{ border: "1px solid #999", padding: "6px 8px" }}>{financial.institution || "—"}</td></tr>
+              <tr><td style={{ border: "1px solid #999", padding: "6px 8px", fontWeight: 700 }}>% Nigerian revenue retained locally</td>
+                <td style={{ border: "1px solid #999", padding: "6px 8px" }}>
+                  {financial.revenueRetentionPct ? `${financial.revenueRetentionPct}%` : "—"}</td></tr>
+            </tbody>
+          </table>
+          <div style={{ fontSize: 10, color: "#666", marginTop: 14 }}>
+            Note: this is a summary printout. NCDMB's full official Financial Services template breaks this
+            into detailed provider-by-provider tables across a three-part reporting structure — a more
+            detailed version of this printout is planned as a follow-up.
           </div>
         </NCDMBDocShell>
       )}
@@ -3257,10 +3343,20 @@ export default function App() {
         <div style={{ flex: 1, overflow: "auto" }} className="nc-main-content-wrap">
           {view === "dashboard" && <Dashboard data={data} setData={setData} />}
           {view === "ncplan" && <NCPlanView data={data} setData={setData} />}
-          {view === "quarterly" && <QuarterlyReportsView data={data} setData={setData} />}
+          {view === "calendar" && <QuarterlyReportsView data={data} setData={setData} />}
+          {view === "forecast" && <QuarterlyReportsView data={data} setData={setData} lockTab="forecast" />}
+          {view === "procServices" && <QuarterlyReportsView data={data} setData={setData} lockTab="procServices" />}
+          {view === "procMaterials" && <QuarterlyReportsView data={data} setData={setData} lockTab="procMaterials" />}
+          {view === "marine" && <QuarterlyReportsView data={data} setData={setData} lockTab="marine" />}
           {view === "ncdf" && <NCDFView data={data} setData={setData} />}
           {view === "annual" && <AnnualReportView data={data} />}
-          {view === "other" && <OtherStatutoryView data={data} setData={setData} />}
+          {view === "training" && <OtherStatutoryView data={data} setData={setData} lockTab="training" />}
+          {view === "rnd" && <OtherStatutoryView data={data} setData={setData} lockTab="rnd" />}
+          {view === "tech" && <OtherStatutoryView data={data} setData={setData} lockTab="tech" />}
+          {view === "insurance" && <OtherStatutoryView data={data} setData={setData} lockTab="insurance" />}
+          {view === "legal" && <OtherStatutoryView data={data} setData={setData} lockTab="legal" />}
+          {view === "financial" && <OtherStatutoryView data={data} setData={setData} lockTab="financial" />}
+          {view === "succession" && <OtherStatutoryView data={data} setData={setData} lockTab="succession" />}
           {view === "entries" && <EntriesView data={data} setData={setData} />}
           {view === "quota" && <QuotaView data={data} setData={setData} />}
           {view === "carbon" && <CarbonView data={data} setData={setData} />}
