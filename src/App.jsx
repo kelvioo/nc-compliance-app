@@ -335,18 +335,18 @@ function Sidebar({ view, setView, company, onLogout, onRefresh, refreshing }) {
   const items = [
     { id: "dashboard", label: "Dashboard", icon: Gauge },
     { id: "ncplan", label: "NC Plan", icon: Layers },
-    { id: "annual", label: "1. NC Performance Report (§60)", icon: TrendingUp },
-    { id: "forecast", label: "2. Job Forecast (§18)", icon: FileText },
-    { id: "procServices", label: "3. Procurement — Services (§24)", icon: FileText },
-    { id: "procMaterials", label: "4. Procurement — Materials (§24)", icon: FileText },
-    { id: "marine", label: "5. Marine Services Utilization (§24)", icon: Ship },
-    { id: "insurance", label: "6. Insurance Report (§49)", icon: ShieldCheck },
-    { id: "legal", label: "7. Legal Services (§51)", icon: ShieldCheck },
-    { id: "financial", label: "8. Financial Services (§52)", icon: ShieldCheck },
-    { id: "training", label: "9–10. Employment & Training (§29)", icon: Users },
-    { id: "rnd", label: "11–12. R&D (§38/39)", icon: TrendingUp },
-    { id: "succession", label: "13. Succession Plan (§33)", icon: ClipboardList },
-    { id: "tech", label: "14–15. Technology Transfer (§44/46)", icon: Package },
+    { id: "annual", label: "NC Performance Report (§60)", icon: TrendingUp },
+    { id: "forecast", label: "Job Forecast (§18)", icon: FileText },
+    { id: "procServices", label: "Procurement — Services (§24)", icon: FileText },
+    { id: "procMaterials", label: "Procurement — Materials (§24)", icon: FileText },
+    { id: "marine", label: "Marine Services Utilization (§24)", icon: Ship },
+    { id: "insurance", label: "Insurance Report (§49)", icon: ShieldCheck },
+    { id: "legal", label: "Legal Services (§51)", icon: ShieldCheck },
+    { id: "financial", label: "Financial Services (§52)", icon: ShieldCheck },
+    { id: "training", label: "Employment & Training (§29)", icon: Users },
+    { id: "rnd", label: "R&D (§38/39)", icon: TrendingUp },
+    { id: "succession", label: "Succession Plan (§33)", icon: ClipboardList },
+    { id: "tech", label: "Technology Transfer (§44/46)", icon: Package },
     { id: "calendar", label: "Compliance calendar", icon: CalendarClock },
     { id: "ncdf", label: "NCDF & NCFCC (§104)", icon: ShieldCheck },
     { id: "entries", label: "Spend log", icon: ClipboardList },
@@ -1294,36 +1294,58 @@ function PlanTable({ headers, rows }) {
 // strip (board name | version/date | page label). Every generated report
 // wraps its content in this so printouts look consistent with NCDMB's own
 // paperwork.
-function NCDMBDocShell({ title, companyName, meta, docLabel, children }) {
+function tableToCSV(headers, rows) {
+  const esc = (v) => `"${String(v).replace(/"/g, '""')}"`;
+  return [headers.map(esc).join(","), ...rows.map((r) => r.map(esc).join(","))].join("\r\n");
+}
+function downloadCSV(filename, headers, rows) {
+  const blob = new Blob([tableToCSV(headers, rows)], { type: "text/csv;charset=utf-8;" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url; a.download = filename; a.click();
+  URL.revokeObjectURL(url);
+}
+
+function NCDMBDocShell({ title, companyName, meta, docLabel, children, csv }) {
   return (
-    <div id="printable" style={{ background: "#fff", color: "#111", padding: "40px 44px",
-      maxWidth: 800, fontFamily: "'IBM Plex Sans', sans-serif", border: "1px solid #2E3742", borderRadius: 10 }}>
-      <div style={{ textAlign: "center", marginBottom: 18 }}>
-        <div style={{ width: 64, height: 64, borderRadius: "50%", border: "2px dashed #B8BEC6",
-          margin: "0 auto 10px", display: "flex", alignItems: "center", justifyContent: "center",
-          fontSize: 9, color: "#B8BEC6", textAlign: "center", lineHeight: 1.2 }}>NCDMB<br />logo</div>
-        <div style={{ fontWeight: 700, fontSize: 15, letterSpacing: 0.3 }}>
-          NIGERIAN CONTENT DEVELOPMENT AND MONITORING BOARD
+    <div>
+      <div className="no-print" style={{ display: "flex", gap: 10, marginBottom: 14 }}>
+        <button onClick={() => window.print()} style={btnPrimary}>
+          <FileText size={14} /> Print / save as PDF
+        </button>
+        {csv && (
+          <button onClick={() => downloadCSV(csv.filename, csv.headers, csv.rows)} style={btnGhost}>
+            <FileText size={14} /> Download (Excel/CSV)
+          </button>
+        )}
+      </div>
+      <div id="printable" style={{ background: "#fff", color: "#111", padding: "40px 44px",
+        maxWidth: 800, fontFamily: "'IBM Plex Sans', sans-serif", border: "1px solid #2E3742", borderRadius: 10 }}>
+        <div style={{ textAlign: "center", marginBottom: 18 }}>
+          <div style={{ height: 64, marginBottom: 10 }} />
+          <div style={{ fontWeight: 700, fontSize: 15, letterSpacing: 0.3 }}>
+            NIGERIAN CONTENT DEVELOPMENT AND MONITORING BOARD
+          </div>
+          <div style={{ fontWeight: 700, fontSize: 15 }}>(NCDMB)</div>
         </div>
-        <div style={{ fontWeight: 700, fontSize: 15 }}>(NCDMB)</div>
-      </div>
-      <div style={{ borderTop: "1px solid #999", marginBottom: 10 }} />
-      <div style={{ background: "#F1F1F1", padding: "14px 16px", marginBottom: 14 }}>
-        <div style={{ fontWeight: 700, fontSize: 13, textAlign: "center" }}>{title}</div>
-      </div>
-      <div style={{ fontSize: 12, marginBottom: 16, display: "flex", flexDirection: "column", gap: 4 }}>
-        <div><strong>Name of Company:</strong> {companyName}</div>
-        {meta}
-      </div>
-
-      {children}
-
-      <div style={{ marginTop: 28, display: "flex", fontSize: 9, color: "#444", borderTop: "1px solid #999" }}>
-        <div style={{ flex: 1, padding: "4px 8px", borderRight: "1px solid #999" }}>
-          Nigerian Content Development and Monitoring Board (NCDMB)
+        <div style={{ borderTop: "1px solid #999", marginBottom: 10 }} />
+        <div style={{ background: "#F1F1F1", padding: "14px 16px", marginBottom: 14 }}>
+          <div style={{ fontWeight: 700, fontSize: 13, textAlign: "center" }}>{title}</div>
         </div>
-        <div style={{ padding: "4px 8px", borderRight: "1px solid #999" }}>Version 1.0</div>
-        <div style={{ flex: 1, padding: "4px 8px", textAlign: "right" }}>{docLabel}</div>
+        <div style={{ fontSize: 12, marginBottom: 16, display: "flex", flexDirection: "column", gap: 4 }}>
+          <div><strong>Name of Company:</strong> {companyName}</div>
+          {meta}
+        </div>
+
+        {children}
+
+        <div style={{ marginTop: 28, display: "flex", fontSize: 9, color: "#444", borderTop: "1px solid #999" }}>
+          <div style={{ flex: 1, padding: "4px 8px", borderRight: "1px solid #999" }}>
+            Nigerian Content Development and Monitoring Board (NCDMB)
+          </div>
+          <div style={{ padding: "4px 8px", borderRight: "1px solid #999" }}>Version 1.0</div>
+          <div style={{ flex: 1, padding: "4px 8px", textAlign: "right" }}>{docLabel}</div>
+        </div>
       </div>
     </div>
   );
@@ -1948,9 +1970,6 @@ function QuarterlyReportsView({ data, setData, lockTab }) {
                 </select>
               </Field>
             )}
-            <button onClick={() => window.print()} style={btnPrimary}>
-              <FileText size={14} /> Print / save as PDF
-            </button>
           </div>
 
           <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 16 }} className="no-print">
@@ -1962,6 +1981,8 @@ function QuarterlyReportsView({ data, setData, lockTab }) {
           <NCDMBDocShell
             title={activeReport.title}
             companyName={data.name}
+            csv={{ filename: `${reportType}-${selectedQuarter.id}.csv`, headers: activeReport.headers,
+              rows: activeReport.rows.map(activeReport.rowsFn) }}
             meta={<>
               <div><strong>Period of Submission:</strong> {selectedQuarter.quarterLabel} ({selectedQuarter.rangeLabel})</div>
             </>}
@@ -2144,14 +2165,11 @@ function NCDFView({ data, setData }) {
         </table>
       </div>
 
-      <div className="no-print" style={{ margin: "20px 0" }}>
-        <button onClick={() => window.print()} style={btnPrimary}>
-          <FileText size={14} /> Print / save as PDF
-        </button>
-      </div>
-
       <NCDMBDocShell title={"NCDF COMPLIANCE STATUS\n(Section 104 — 1% Nigeria Content Development Fund)"}
         companyName={data.name}
+        csv={{ filename: "ncdf-remittances.csv", headers: ["Contract", "Contract Value (USD)", "1% Due", "Remitted", "Status", "Reference", "Date"],
+          rows: ncdf.remittances.map((r) => [r.contractDescription, r.contractValueUsd, r.contractValueUsd * 0.01, r.amountRemitted,
+            r.amountRemitted < r.contractValueUsd * 0.01 ? "Short-paid" : "Fully remitted", r.reference, r.date]) }}
         meta={<>
           <div><strong>NCFCC Certificate No.:</strong> {cert.certificateNumber || "—"}</div>
           <div><strong>Issue Date:</strong> {cert.issueDate || "—"} &nbsp; <strong>Expiry Date:</strong> {cert.expiryDate || "—"}</div>
@@ -2232,9 +2250,6 @@ function AnnualReportView({ data }) {
             {[year - 1, year, year + 1].map((y) => <option key={y} value={y}>{y}</option>)}
           </select>
         </Field>
-        <button onClick={() => window.print()} style={btnPrimary}>
-          <FileText size={14} /> Print / save as PDF
-        </button>
       </div>
 
       <div className="no-print" style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 16 }}>
@@ -2661,12 +2676,6 @@ function OtherStatutoryView({ data, setData, lockTab }) {
           </div>
         </>
       )}
-
-      <div className="no-print" style={{ margin: "20px 0" }}>
-        <button onClick={() => window.print()} style={btnPrimary}>
-          <FileText size={14} /> Print / save as PDF
-        </button>
-      </div>
 
       {tab === "training" && (
         <NCDMBDocShell title={"EMPLOYMENT & TRAINING PLAN AND REPORT\n(Section 29)"} companyName={data.name}
