@@ -335,6 +335,10 @@ function Sidebar({ view, setView, company, onLogout, onRefresh, refreshing }) {
   const items = [
     { id: "dashboard", label: "Dashboard", icon: Gauge },
     { id: "ncplan", label: "NC Plan", icon: Layers },
+    { id: "entries", label: "Spend log", icon: ClipboardList },
+    { id: "quota", label: "Expat quota", icon: Users },
+    { id: "carbon", label: "Carbon intensity", icon: Leaf },
+    { id: "ncdf", label: "NCDF & NCFCC (§104)", icon: ShieldCheck },
     { id: "annual", label: "NC Performance Report (§60)", icon: TrendingUp },
     { id: "forecast", label: "Job Forecast (§18)", icon: FileText },
     { id: "procServices", label: "Procurement — Services (§24)", icon: FileText },
@@ -348,10 +352,6 @@ function Sidebar({ view, setView, company, onLogout, onRefresh, refreshing }) {
     { id: "succession", label: "Succession Plan (§33)", icon: ClipboardList },
     { id: "tech", label: "Technology Transfer (§44/46)", icon: Package },
     { id: "calendar", label: "Compliance calendar", icon: CalendarClock },
-    { id: "ncdf", label: "NCDF & NCFCC (§104)", icon: ShieldCheck },
-    { id: "entries", label: "Spend log", icon: ClipboardList },
-    { id: "quota", label: "Expat quota", icon: Users },
-    { id: "carbon", label: "Carbon intensity", icon: Leaf },
     { id: "report", label: "Report", icon: FileText },
   ];
   return (
@@ -1568,7 +1568,7 @@ function QuarterlyReportsView({ data, setData, lockTab }) {
           }}>
             <div>
               <div style={{ fontSize: 11, color: "#8D97A3", textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 8 }}>Basics</div>
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 130px 130px 130px", gap: 10 }}>
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))", gap: 10 }}>
                 <Field label="Description">
                   <input style={inputStyle} value={form.description}
                     onChange={(e) => setForm({ ...form, description: e.target.value })}
@@ -1686,7 +1686,7 @@ function QuarterlyReportsView({ data, setData, lockTab }) {
 
             <div>
               <div style={{ fontSize: 11, color: "#8D97A3", textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 8 }}>Value & scheduling</div>
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 130px 130px", gap: 10 }}>
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))", gap: 10 }}>
                 <Field label="Spend incountry (USD)">
                   <input type="number" min="0" style={inputStyle} value={form.spendIncountry}
                     onChange={(e) => setForm({ ...form, spendIncountry: e.target.value })} />
@@ -1855,7 +1855,7 @@ function QuarterlyReportsView({ data, setData, lockTab }) {
             </div>
             <div>
               <div style={{ fontSize: 11, color: "#8D97A3", textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 8 }}>Project details</div>
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 130px 130px", gap: 10 }}>
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))", gap: 10 }}>
                 <Field label="Project name">
                   <input style={inputStyle} value={marineForm.projectName}
                     onChange={(e) => setMarineForm({ ...marineForm, projectName: e.target.value })} />
@@ -1880,7 +1880,7 @@ function QuarterlyReportsView({ data, setData, lockTab }) {
             </div>
             <div>
               <div style={{ fontSize: 11, color: "#8D97A3", textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 8 }}>Spend & personnel onboard (POB)</div>
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 100px 100px 140px", gap: 10 }}>
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))", gap: 10 }}>
                 <Field label="Spend incountry (USD)">
                   <input type="number" min="0" style={inputStyle} value={marineForm.spendIncountry}
                     onChange={(e) => setMarineForm({ ...marineForm, spendIncountry: e.target.value })} />
@@ -2088,7 +2088,7 @@ function NCDFView({ data, setData }) {
       </div>
 
       <form onSubmit={addRemittance} className="nc-form-grid" style={{
-        display: "grid", gridTemplateColumns: "1fr 150px 150px 1fr 130px", gap: 10,
+        display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))", gap: 10,
         background: "#1A2028", border: "1px solid #2E3742", borderRadius: 10, padding: 16, marginBottom: 22, rowGap: 12,
       }}>
         <Field label="Contract description">
@@ -2447,7 +2447,7 @@ function OtherStatutoryView({ data, setData, lockTab }) {
             </Field>
           </div>
           <form onSubmit={addTraining} className="nc-form-grid" style={{
-            display: "grid", gridTemplateColumns: "1fr 150px 150px 150px", gap: 10,
+            display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))", gap: 10,
             background: "#1A2028", border: "1px solid #2E3742", borderRadius: 10, padding: 16, marginBottom: 20, rowGap: 12,
           }}>
             <Field label="Training program">
@@ -2487,7 +2487,7 @@ function OtherStatutoryView({ data, setData, lockTab }) {
             </Field>
           </div>
           <form onSubmit={addRnd} className="nc-form-grid" style={{
-            display: "grid", gridTemplateColumns: "1fr 160px 160px", gap: 10,
+            display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))", gap: 10,
             background: "#1A2028", border: "1px solid #2E3742", borderRadius: 10, padding: 16, marginBottom: 20, rowGap: 12,
           }}>
             <Field label="Initiative">
@@ -2525,7 +2525,7 @@ function OtherStatutoryView({ data, setData, lockTab }) {
             </Field>
           </div>
           <form onSubmit={addTech} className="nc-form-grid" style={{
-            display: "grid", gridTemplateColumns: "1fr 1fr 150px", gap: 10,
+            display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))", gap: 10,
             background: "#1A2028", border: "1px solid #2E3742", borderRadius: 10, padding: 16, marginBottom: 20, rowGap: 12,
           }}>
             <Field label="Transfer partner">
@@ -2625,7 +2625,7 @@ function OtherStatutoryView({ data, setData, lockTab }) {
       {tab === "succession" && (
         <>
           <form onSubmit={addSuccession} className="nc-form-grid" style={{
-            display: "grid", gridTemplateColumns: "1fr 1fr 150px 130px", gap: 10,
+            display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))", gap: 10,
             background: "#1A2028", border: "1px solid #2E3742", borderRadius: 10, padding: 16, marginBottom: 20, rowGap: 12,
           }}>
             <Field label="Expatriate role / position">
@@ -3311,16 +3311,19 @@ export default function App() {
           to { transform: rotate(360deg); }
         }
         @media print {
-          .no-print { display: none !important; }
-          body { background: #FFFFFF !important; }
+          body * { visibility: hidden; }
+          #printable, #printable * { visibility: visible; }
           #printable {
+            position: absolute; left: 0; top: 0; width: 100%;
             background: #FFFFFF !important;
-            border: 1px solid #999999 !important;
+            border: none !important;
             color: #000000 !important;
+            box-shadow: none !important;
           }
           #printable * {
             color: #000000 !important;
             border-color: #999999 !important;
+            box-shadow: none !important;
           }
         }
         @media (max-width: 720px) {
