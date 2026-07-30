@@ -338,6 +338,7 @@ function Sidebar({ view, setView, company, onLogout, onRefresh, refreshing }) {
     { id: "entries", label: "Spend log", icon: ClipboardList },
     { id: "quota", label: "Expat quota", icon: Users },
     { id: "carbon", label: "Carbon intensity", icon: Leaf },
+    { id: "report", label: "Report", icon: FileText },
     { id: "ncdf", label: "NCDF & NCFCC (§104)", icon: ShieldCheck },
     { id: "annual", label: "NC Performance Report (§60)", icon: TrendingUp },
     { id: "forecast", label: "Job Forecast (§18)", icon: FileText },
@@ -352,7 +353,6 @@ function Sidebar({ view, setView, company, onLogout, onRefresh, refreshing }) {
     { id: "succession", label: "Succession Plan (§33)", icon: ClipboardList },
     { id: "tech", label: "Technology Transfer (§44/46)", icon: Package },
     { id: "calendar", label: "Compliance calendar", icon: CalendarClock },
-    { id: "report", label: "Report", icon: FileText },
   ];
   return (
     <div style={{
@@ -1604,7 +1604,7 @@ function QuarterlyReportsView({ data, setData, lockTab }) {
               <div style={{ fontSize: 11, color: "#8D97A3", textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 8 }}>
                 {form.nature === "Materials" ? "Material information" : "Service information"}
               </div>
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr", gap: 10 }}>
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))", gap: 10 }}>
                 <Field label="NCEC number">
                   <input style={inputStyle} value={form.ncecNumber}
                     onChange={(e) => setForm({ ...form, ncecNumber: e.target.value })} placeholder="Optional" />
@@ -1660,7 +1660,7 @@ function QuarterlyReportsView({ data, setData, lockTab }) {
 
             <div>
               <div style={{ fontSize: 11, color: "#8D97A3", textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 8 }}>Contract information</div>
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr 1fr", gap: 10 }}>
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))", gap: 10 }}>
                 <Field label="PO date">
                   <input type="date" style={inputStyle} value={form.poDate}
                     onChange={(e) => setForm({ ...form, poDate: e.target.value })} />
@@ -1719,7 +1719,7 @@ function QuarterlyReportsView({ data, setData, lockTab }) {
               <div style={{ fontSize: 11, color: "#8D97A3", textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 8 }}>
                 Job Forecast fields (only needed if this contract is ≥ $1,000,000)
               </div>
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr 1fr", gap: 10 }}>
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))", gap: 10 }}>
                 <Field label="Tender number">
                   <input style={inputStyle} value={form.tenderNumber}
                     onChange={(e) => setForm({ ...form, tenderNumber: e.target.value })} placeholder="Optional" />
@@ -1801,7 +1801,7 @@ function QuarterlyReportsView({ data, setData, lockTab }) {
           }}>
             <div>
               <div style={{ fontSize: 11, color: "#8D97A3", textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 8 }}>Vessel contractor</div>
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr", gap: 10 }}>
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))", gap: 10 }}>
                 <Field label="Contractor name">
                   <input style={inputStyle} value={marineForm.contractorName}
                     onChange={(e) => setMarineForm({ ...marineForm, contractorName: e.target.value })} />
@@ -1830,7 +1830,7 @@ function QuarterlyReportsView({ data, setData, lockTab }) {
             </div>
             <div>
               <div style={{ fontSize: 11, color: "#8D97A3", textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 8 }}>Vessel details</div>
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr 1fr", gap: 10 }}>
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))", gap: 10 }}>
                 <Field label="Vessel name">
                   <input style={inputStyle} value={marineForm.vesselName}
                     onChange={(e) => setMarineForm({ ...marineForm, vesselName: e.target.value })} placeholder="e.g. MV Bonny Star" />
