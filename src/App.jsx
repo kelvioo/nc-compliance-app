@@ -332,13 +332,15 @@ function LoginScreen({ onEnter }) {
 }
 
 function Sidebar({ view, setView, company, onLogout, onRefresh, refreshing }) {
-  const items = [
-    { id: "dashboard", label: "Dashboard", icon: Gauge },
-    { id: "ncplan", label: "NC Plan", icon: Layers },
+  const topItem = { id: "dashboard", label: "Dashboard", icon: Gauge };
+  const groupedItems = [
     { id: "entries", label: "Spend log", icon: ClipboardList },
     { id: "quota", label: "Expat quota", icon: Users },
     { id: "carbon", label: "Carbon intensity", icon: Leaf },
     { id: "report", label: "Report", icon: FileText },
+  ];
+  const items = [
+    { id: "ncplan", label: "NC Plan", icon: Layers },
     { id: "ncdf", label: "NCDF & NCFCC (§104)", icon: ShieldCheck },
     { id: "annual", label: "NC Performance Report (§60)", icon: TrendingUp },
     { id: "forecast", label: "Job Forecast (§18)", icon: FileText },
@@ -354,6 +356,23 @@ function Sidebar({ view, setView, company, onLogout, onRefresh, refreshing }) {
     { id: "tech", label: "Technology Transfer (§44/46)", icon: Package },
     { id: "calendar", label: "Compliance calendar", icon: CalendarClock },
   ];
+  const renderItem = (it) => {
+    const Icon = it.icon;
+    const active = view === it.id;
+    return (
+      <button key={it.id} onClick={() => setView(it.id)} className="nc-sidebar-nav-item" style={{
+        display: "flex", alignItems: "center", gap: 10, padding: "10px 12px",
+        borderRadius: 6, border: "none", cursor: "pointer", textAlign: "left",
+        background: active ? "#1A2028" : "transparent",
+        color: active ? "#EDEFF2" : "#8D97A3", fontSize: 14,
+        fontFamily: "IBM Plex Sans, sans-serif",
+        borderLeft: active ? "2px solid #E6A23C" : "2px solid transparent",
+      }}>
+        <Icon size={16} />
+        {it.label}
+      </button>
+    );
+  };
   return (
     <div style={{
       width: 200, background: "#0F1216", borderRight: "1px solid #2E3742",
@@ -366,23 +385,17 @@ function Sidebar({ view, setView, company, onLogout, onRefresh, refreshing }) {
           {company.name}
         </div>
       </div>
-      {items.map((it) => {
-        const Icon = it.icon;
-        const active = view === it.id;
-        return (
-          <button key={it.id} onClick={() => setView(it.id)} className="nc-sidebar-nav-item" style={{
-            display: "flex", alignItems: "center", gap: 10, padding: "10px 12px",
-            borderRadius: 6, border: "none", cursor: "pointer", textAlign: "left",
-            background: active ? "#1A2028" : "transparent",
-            color: active ? "#EDEFF2" : "#8D97A3", fontSize: 14,
-            fontFamily: "IBM Plex Sans, sans-serif",
-            borderLeft: active ? "2px solid #E6A23C" : "2px solid transparent",
-          }}>
-            <Icon size={16} />
-            {it.label}
-          </button>
-        );
-      })}
+      {renderItem(topItem)}
+      <div style={{
+        border: "1px solid #2E3742", borderRadius: 8, padding: 4, margin: "4px 0",
+        display: "flex", flexDirection: "column", gap: 4,
+      }}>
+        {groupedItems.map(renderItem)}
+        <div style={{ fontSize: 10, color: "#5B6470", padding: "2px 12px 4px", lineHeight: 1.3 }}>
+          Report pulls its numbers from these three
+        </div>
+      </div>
+      {items.map(renderItem)}
       <div className="nc-sidebar-spacer" style={{ flex: 1 }} />
       <button onClick={onRefresh} disabled={refreshing} className="nc-sidebar-logout" style={{
         display: "flex", alignItems: "center", gap: 10, padding: "10px 12px",
@@ -1478,9 +1491,15 @@ function QuarterlyReportsView({ data, setData, lockTab }) {
   const selectedQuarter = quarters.find((q) => q.id === reportQuarter) || quarters[0];
   const inQuarter = contracts.filter((c) => c.quarter === reportQuarter);
   const marineInQuarter = marineServices.filter((m) => m.quarter === reportQuarter);
-  const forecastRows = inQuarter.filter((c) => c.estimatedValueUsd >= JOB_FORECAST_THRESHOLD_USD);
-  const procurementMaterialsRows = inQuarter.filter((c) => c.estimatedValueUsd < JOB_FORECAST_THRESHOLD_USD && c.nature === "Materials");
-  const procurementServicesRows = inQuarter.filter((c) => c.estimatedValueUsd < JOB_FORECAST_THRESHOLD_USD && c.nature === "Services");
+  const forecastRows = lockTab === "forecast"
+    ? inQuarter
+    : inQuarter.filter((c) => c.estimatedValueUsd >= JOB_FORECAST_THRESHOLD_USD);
+  const procurementMaterialsRows = lockTab === "procMaterials"
+    ? inQuarter.filter((c) => c.nature === "Materials")
+    : inQuarter.filter((c) => c.estimatedValueUsd < JOB_FORECAST_THRESHOLD_USD && c.nature === "Materials");
+  const procurementServicesRows = lockTab === "procServices"
+    ? inQuarter.filter((c) => c.nature === "Services")
+    : inQuarter.filter((c) => c.estimatedValueUsd < JOB_FORECAST_THRESHOLD_USD && c.nature === "Services");
   const REPORT_TYPES = {
     forecast: { label: "Job Forecast Report (§18) — ≥ $1,000,000", section: "18", rows: forecastRows,
       title: "JOB FORECAST\n($1 Million and above)",
@@ -1977,6 +1996,24 @@ function QuarterlyReportsView({ data, setData, lockTab }) {
             <DeadlineBadge days={daysUntil(new Date(selectedQuarter.deadline), new Date())} />
             <span style={{ fontSize: 12, color: "#5B6470" }}>({selectedQuarter.deadlineLabel})</span>
           </div>
+
+          {lockTab === "forecast" && forecastRows.some((r) => r.estimatedValueUsd < JOB_FORECAST_THRESHOLD_USD) && (
+            <div className="no-print" style={{ background: "#3A2A12", border: "1px solid #E6A23C", borderRadius: 8,
+              padding: "10px 14px", marginBottom: 16, fontSize: 12, color: "#E6A23C" }}>
+              Note: NCDMB's Job Forecast Report officially only requires contracts, subcontracts, and purchase
+              orders valued at $1,000,000 or above. Entries below that are shown here so you can see them
+              immediately, but they belong on the Procurement report instead for actual submission.
+            </div>
+          )}
+          {(lockTab === "procMaterials" || lockTab === "procServices") &&
+            inQuarter.some((c) => c.nature === (lockTab === "procMaterials" ? "Materials" : "Services") && c.estimatedValueUsd >= JOB_FORECAST_THRESHOLD_USD) && (
+            <div className="no-print" style={{ background: "#3A2A12", border: "1px solid #E6A23C", borderRadius: 8,
+              padding: "10px 14px", marginBottom: 16, fontSize: 12, color: "#E6A23C" }}>
+              Note: NCDMB's Procurement Report officially only covers contracts below $1,000,000. Entries at
+              or above that are shown here so you can see them immediately, but they belong on the Job
+              Forecast report instead for actual submission.
+            </div>
+          )}
 
           <NCDMBDocShell
             title={activeReport.title}
