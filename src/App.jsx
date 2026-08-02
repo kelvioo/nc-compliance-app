@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback } from "react";
 import {
   Gauge, Plus, FileText, Users, LogOut, Building2, TrendingUp,
   Trash2, ChevronRight, ClipboardList, ShieldCheck, X, Loader2, Leaf, RefreshCw,
-  Layers, Ship, HardHat, Package, CalendarClock
+  Layers, Ship, HardHat, Package, CalendarClock, Menu as MenuIcon
 } from "lucide-react";
 
 const CATS = [
@@ -331,7 +331,7 @@ function LoginScreen({ onEnter }) {
   );
 }
 
-function Sidebar({ view, setView, company, onLogout, onRefresh, refreshing }) {
+function Sidebar({ view, setView, company, onLogout, onRefresh, refreshing, mobileOpen }) {
   const topItem = { id: "dashboard", label: "Dashboard", icon: Gauge };
   const groupedItems = [
     { id: "entries", label: "Spend log", icon: ClipboardList },
@@ -378,7 +378,7 @@ function Sidebar({ view, setView, company, onLogout, onRefresh, refreshing }) {
       width: 200, background: "#0F1216", borderRight: "1px solid #2E3742",
       padding: "20px 14px", display: "flex", flexDirection: "column", gap: 4,
       fontFamily: "IBM Plex Sans, sans-serif",
-    }} className="nc-sidebar">
+    }} className={`nc-sidebar${mobileOpen ? " nc-sidebar-open" : ""}`}>
       <div className="nc-sidebar-header" style={{ display: "flex", alignItems: "center", gap: 8, padding: "0 6px 20px" }}>
         <Building2 size={18} color="#E6A23C" />
         <div style={{ fontSize: 13, color: "#EDEFF2", fontWeight: 600, lineHeight: 1.3 }}>
@@ -3307,6 +3307,7 @@ export default function App() {
   const { data, setData, loading, reload } = useCompanyStorage(session);
   const [view, setView] = useState("dashboard");
   const [refreshing, setRefreshing] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   const handleRefresh = useCallback(async () => {
     setRefreshing(true);
@@ -3364,30 +3365,46 @@ export default function App() {
           }
         }
         @media (max-width: 720px) {
-          .nc-layout { flex-direction: column !important; }
+          .nc-layout { position: relative; }
           .nc-sidebar {
-            width: 100% !important;
-            flex-direction: row !important;
-            overflow-x: auto !important;
-            padding: 10px 8px !important;
-            align-items: center !important;
-            gap: 6px !important;
+            position: fixed !important;
+            top: 0; left: 0; bottom: 0;
+            width: 240px !important;
+            z-index: 40;
+            transform: translateX(-100%);
+            transition: transform 0.2s ease;
+            box-shadow: 2px 0 16px rgba(0,0,0,0.4);
           }
-          .nc-sidebar-header { padding: 0 8px 0 0 !important; flex-shrink: 0; }
-          .nc-sidebar-nav-item {
-            flex-shrink: 0;
-            white-space: nowrap;
+          .nc-sidebar.nc-sidebar-open { transform: translateX(0); }
+          .nc-sidebar-backdrop {
+            position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 35;
           }
-          .nc-sidebar-spacer { display: none !important; }
-          .nc-sidebar-logout { flex-shrink: 0; }
+          .nc-mobile-topbar { display: flex !important; }
           .nc-main-content { padding: 16px !important; }
           .nc-form-grid { grid-template-columns: 1fr !important; }
         }
       `}</style>
       <div style={{ display: "flex", minHeight: 560, background: "#12161B", borderRadius: 10, overflow: "hidden" }} className="nc-layout">
+        <div className="nc-mobile-topbar no-print" style={{
+          display: "none", alignItems: "center", gap: 10, padding: "12px 14px",
+          borderBottom: "1px solid #2E3742", position: "sticky", top: 0, background: "#12161B", zIndex: 20,
+          width: "100%",
+        }}>
+          <button onClick={() => setSidebarOpen(true)} style={{
+            background: "none", border: "none", color: "#EDEFF2", cursor: "pointer",
+            display: "flex", alignItems: "center", padding: 4,
+          }} aria-label="Open menu">
+            <MenuIcon size={22} />
+          </button>
+          <div style={{ fontSize: 14, color: "#EDEFF2", fontWeight: 600 }}>{data.name}</div>
+        </div>
+        {sidebarOpen && (
+          <div className="nc-sidebar-backdrop no-print" onClick={() => setSidebarOpen(false)} />
+        )}
         <div className="no-print">
-          <Sidebar view={view} setView={setView} company={data} onLogout={() => setSession(null)}
-            onRefresh={handleRefresh} refreshing={refreshing} />
+          <Sidebar view={view} setView={(v) => { setView(v); setSidebarOpen(false); }} company={data}
+            onLogout={() => setSession(null)} onRefresh={handleRefresh} refreshing={refreshing}
+            mobileOpen={sidebarOpen} />
         </div>
         <div style={{ flex: 1, overflow: "auto" }} className="nc-main-content-wrap">
           {view === "dashboard" && <Dashboard data={data} setData={setData} />}
