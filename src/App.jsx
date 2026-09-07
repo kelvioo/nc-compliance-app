@@ -2,7 +2,9 @@ import React, { useState, useEffect, useCallback } from "react";
 import {
   Gauge, Plus, FileText, Users, LogOut, Building2, TrendingUp,
   Trash2, ChevronRight, ClipboardList, ShieldCheck, X, Loader2, Leaf, RefreshCw,
-  Layers, Ship, HardHat, Package, CalendarClock, Menu as MenuIcon
+  Layers, Ship, HardHat, Package, CalendarClock,
+  CreditCard, AlertTriangle, RadioTower, LockKeyhole, CheckCircle2,
+  Handshake, BadgeCheck, Landmark, ChevronDown
 } from "lucide-react";
 
 const CATS = [
@@ -56,6 +58,12 @@ const CONTRACT_CATEGORIES = ["Contract", "Subcontract", "Purchase order"];
 const CONTRACT_NATURE = ["Materials", "Services"]; // splits §24 Procurement Report into its two official templates
 const CONTRACT_STATUSES = ["Planned / to be bid", "Bidding in progress", "Awarded", "Executed"];
 const JOB_FORECAST_THRESHOLD_USD = 1000000;
+
+const SUBSCRIPTION_PLANS = [
+  { id: "starter", name: "Starter", price: 150000, users: "Up to 5 users", description: "Core Nigerian Content tracking and statutory reports." },
+  { id: "operations", name: "Operations", price: 450000, users: "Up to 25 users", description: "Assurance actions, tender workspace and audit-ready exports." },
+  { id: "enterprise", name: "Enterprise", price: 1000000, users: "Unlimited users", description: "Multi-asset controls, deal rooms and priority onboarding." },
+];
 
 function getQuarterOptions() {
   const now = new Date();
@@ -334,12 +342,15 @@ function LoginScreen({ onEnter }) {
 function Sidebar({ view, setView, company, onLogout, onRefresh, refreshing }) {
   const topItem = { id: "dashboard", label: "Dashboard", icon: Gauge };
   const groupedItems = [
+    { id: "assurance", label: "Operations assurance", icon: AlertTriangle },
     { id: "entries", label: "Spend log", icon: ClipboardList },
     { id: "quota", label: "Expat quota", icon: Users },
     { id: "carbon", label: "Carbon intensity", icon: Leaf },
     { id: "report", label: "Report", icon: FileText },
   ];
   const items = [
+    { id: "marketplace", label: "Deal rooms & trade", icon: Handshake },
+    { id: "subscription", label: "Subscription & billing", icon: CreditCard },
     { id: "ncplan", label: "NC Plan", icon: Layers },
     { id: "ncdf", label: "NCDF & NCFCC (§104)", icon: ShieldCheck },
     { id: "annual", label: "NC Performance Report (§60)", icon: TrendingUp },
@@ -3281,6 +3292,73 @@ function ReportView({ data }) {
   );
 }
 
+function OperationsAssuranceView({ data, setData }) {
+  const [actions, setActions] = useState(data.assuranceActions || [
+    { id: "ptw", title: "Permit-to-work register review", owner: "HSE", due: "", priority: "Critical", complete: false },
+    { id: "flare", title: "Gas-flaring variance and evidence review", owner: "Operations", due: "", priority: "High", complete: false },
+    { id: "vendor", title: "Vendor Nigerian Content evidence check", owner: "Supply chain", due: "", priority: "High", complete: false },
+  ]);
+  const save = (next) => { setActions(next); setData({ ...data, assuranceActions: next }); };
+  const open = actions.filter((action) => !action.complete);
+
+  return <div className="nc-main-content nc-premium-page">
+    <div className="nc-premium-heading"><div><span>OPERATIONS CONTROL ROOM</span><h1>Operations assurance</h1><p>Bring permit, flare, contractor and reporting risks into one accountable field-action register.</p></div><div className="nc-risk-chip"><AlertTriangle size={17} /> {open.length} open actions</div></div>
+    <div className="nc-assurance-grid">
+      {actions.map((action) => <article className={`nc-assurance-card ${action.complete ? "is-complete" : ""}`} key={action.id}>
+        <div className="nc-card-line"><b className={`nc-priority ${action.priority.toLowerCase()}`}>{action.priority} priority</b>
+          <button className="nc-complete-button" onClick={() => save(actions.map((item) => item.id === action.id ? { ...item, complete: !item.complete } : item))}>{action.complete ? <CheckCircle2 size={16} /> : "Mark complete"}</button></div>
+        <h2>{action.title}</h2><p>Action owner: <strong>{action.owner}</strong></p>
+        <label>Due date<input type="date" value={action.due} onChange={(e) => save(actions.map((item) => item.id === action.id ? { ...item, due: e.target.value } : item))} /></label>
+      </article>)}
+    </div>
+    <div className="nc-safe-note"><RadioTower size={17} /> Use this register for internal control. Formal regulatory figures still require your approved NUPRC/NCDMB methodology and evidence.</div>
+  </div>;
+}
+
+function MarketplaceView({ data, setData }) {
+  const [deals, setDeals] = useState(data.dealRooms || []);
+  const [form, setForm] = useState({ title: "", counterparty: "", value: "", category: "Services" });
+  const save = (next) => { setDeals(next); setData({ ...data, dealRooms: next }); };
+  const createRoom = (e) => {
+    e.preventDefault();
+    if (!form.title.trim() || !form.counterparty.trim()) return;
+    save([{ id: Date.now().toString(36), ...form, value: Number(form.value || 0), stage: "Due diligence", createdAt: new Date().toISOString().slice(0, 10) }, ...deals]);
+    setForm({ title: "", counterparty: "", value: "", category: "Services" });
+  };
+  const advance = (id) => save(deals.map((deal) => deal.id === id ? { ...deal, stage: deal.stage === "Due diligence" ? "Milestone approval" : deal.stage === "Milestone approval" ? "Ready for settlement" : "Completed" } : deal));
+  return <div className="nc-main-content nc-premium-page">
+    <div className="nc-premium-heading"><div><span>VERIFIED B2B WORKSPACE</span><h1>Deal rooms & trade</h1><p>Open a controlled workspace with another company for RFQs, documents, approvals and payment-readiness.</p></div><Handshake color="#E6A23C" size={28} /></div>
+    <div className="nc-trade-notice"><Landmark size={17} /><span><strong>Escrow-ready, not self-custodied.</strong> Connect a licensed Nigerian payment/escrow provider before holding or releasing funds.</span></div>
+    <form onSubmit={createRoom} className="nc-deal-form"><Field label="Opportunity / RFQ"><input style={inputStyle} value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} placeholder="e.g. Fabrication support RFQ" /></Field><Field label="Counterparty company"><input style={inputStyle} value={form.counterparty} onChange={(e) => setForm({ ...form, counterparty: e.target.value })} placeholder="Verified company name" /></Field><Field label="Estimated contract value (NGN)"><input style={inputStyle} type="number" min="0" value={form.value} onChange={(e) => setForm({ ...form, value: e.target.value })} placeholder="0" /></Field><Field label="Category"><select style={inputStyle} value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value })}><option>Services</option><option>Materials</option><option>Marine</option><option>Fabrication</option></select></Field><button style={btnPrimary} type="submit"><Handshake size={16} /> Open deal room</button></form>
+    <div className="nc-deal-list">{deals.length === 0 ? <div className="nc-empty-state"><BadgeCheck size={25} /> Create a deal room to start a controlled B2B trade workflow.</div> : deals.map((deal) => <article className="nc-deal-card" key={deal.id}><div><b>{deal.title}</b><p>{deal.counterparty} · {deal.category} · {fmtNaira(deal.value)}</p></div><div className="nc-deal-actions"><span>{deal.stage}</span>{deal.stage !== "Completed" && <button onClick={() => advance(deal.id)}>Advance <ChevronDown size={14} /></button>}</div></article>)}</div>
+  </div>;
+}
+
+function SubscriptionView({ data, setData }) {
+  const [busy, setBusy] = useState("");
+  const [error, setError] = useState("");
+  const [email, setEmail] = useState(data.billingEmail || "");
+  const current = data.subscription?.plan;
+  const checkout = async (plan) => {
+    setBusy(plan.id); setError("");
+    try {
+      if (!/^\S+@\S+\.\S+$/.test(email)) throw new Error("Enter the finance or billing email for this company.");
+      await setData({ ...data, billingEmail: email });
+      const { data: checkoutData, error: checkoutError } = await supabase.functions.invoke("create-checkout", { body: { plan: plan.id, companyId: data.id, companyName: data.name, email } });
+      if (checkoutError) throw checkoutError;
+      if (!checkoutData?.authorization_url) throw new Error("Checkout is not configured yet. Ask your administrator to set the payment provider keys.");
+      window.location.assign(checkoutData.authorization_url);
+    } catch (err) { setError(err.message || "Unable to start checkout."); }
+    setBusy("");
+  };
+  return <div className="nc-main-content nc-premium-page">
+    <div className="nc-premium-heading"><div><span>NC COMPLIANCE PREMIUM</span><h1>Subscription & billing</h1><p>Annual plans for Nigerian operators, service companies and project teams.</p></div><LockKeyhole color="#E6A23C" size={28} /></div>
+    <Field label="Finance / billing email"><input style={{ ...inputStyle, maxWidth: 420 }} type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="finance@company.com" /></Field><div style={{ height: 16 }} />
+    <div className="nc-plan-grid">{SUBSCRIPTION_PLANS.map((plan) => <article className={`nc-plan-card ${plan.id === "operations" ? "is-recommended" : ""}`} key={plan.id}>{plan.id === "operations" && <span className="nc-best-value">MOST POPULAR</span>}<h2>{plan.name}</h2><div className="nc-price">{fmtNaira(plan.price)}<small>/ year</small></div><p>{plan.description}</p><div className="nc-plan-users">{plan.users}</div><button style={btnPrimary} disabled={busy || current === plan.id} onClick={() => checkout(plan)}><CreditCard size={16} />{current === plan.id ? "Current plan" : busy === plan.id ? "Opening secure checkout…" : `Choose ${plan.name}`}</button></article>)}</div>
+    {error && <p className="nc-checkout-error" role="alert">{error}</p>}<p className="nc-billing-footnote">Payments are initiated securely through the configured provider. Plan activation must be verified by a server-side webhook.</p>
+  </div>;
+}
+
 const SESSION_KEY = "nc_session";
 
 export default function App() {
@@ -3363,22 +3441,24 @@ export default function App() {
             box-shadow: none !important;
           }
         }
+        .nc-premium-page { padding: 28px; font-family: "IBM Plex Sans", sans-serif; }
+        .nc-premium-heading { display:flex; justify-content:space-between; gap:16px; align-items:flex-start; margin-bottom:24px; }
+        .nc-premium-heading > div > span { color:#E6A23C; font-size:11px; font-weight:600; letter-spacing:1.2px; }
+        .nc-premium-heading h1 { margin:5px 0 7px; color:#EDEFF2; font:500 24px Oswald,sans-serif; letter-spacing:1px; text-transform:uppercase; }
+        .nc-premium-heading p { margin:0; color:#8D97A3; font-size:13px; line-height:1.55; max-width:650px; }
+        .nc-risk-chip,.nc-trade-notice,.nc-safe-note { display:flex; gap:8px; align-items:center; border:1px solid #2E3742; border-radius:8px; background:#1A2028; color:#E6A23C; padding:10px 12px; font-size:12px; white-space:nowrap; }
+        .nc-assurance-grid,.nc-plan-grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:14px; }
+        .nc-assurance-card,.nc-plan-card,.nc-deal-card { background:#1A2028; border:1px solid #2E3742; border-radius:10px; padding:18px; color:#EDEFF2; }
+        .nc-assurance-card.is-complete { opacity:.58; }.nc-card-line { display:flex; justify-content:space-between; align-items:center; gap:8px; }.nc-priority { color:#E6A23C; font-size:10px; letter-spacing:.8px; text-transform:uppercase; }.nc-priority.critical { color:#D9534F; }.nc-complete-button,.nc-deal-actions button { display:inline-flex; align-items:center; gap:5px; border:1px solid #3A4552; border-radius:5px; padding:6px 8px; background:transparent; color:#EDEFF2; font-size:11px; cursor:pointer; }.nc-assurance-card h2,.nc-plan-card h2 { margin:18px 0 8px; font-size:17px; line-height:1.35; }.nc-assurance-card p,.nc-plan-card p,.nc-billing-footnote { color:#8D97A3; font-size:13px; line-height:1.55; }.nc-assurance-card label { display:flex; flex-direction:column; gap:5px; color:#8D97A3; font-size:11px; margin-top:14px; }.nc-assurance-card input { background:#12161B; color:#EDEFF2; border:1px solid #2E3742; border-radius:5px; padding:7px; }.nc-safe-note { margin-top:16px; color:#8D97A3; white-space:normal; }
+        .nc-trade-notice { color:#8D97A3; white-space:normal; margin-bottom:14px; }.nc-trade-notice strong { color:#E6A23C; }.nc-deal-form { display:grid; grid-template-columns:1.4fr 1.2fr 1fr 1fr auto; gap:10px; align-items:end; background:#1A2028; border:1px solid #2E3742; border-radius:10px; padding:16px; }.nc-deal-list { margin-top:16px; display:flex; flex-direction:column; gap:10px; }.nc-deal-card { display:flex; justify-content:space-between; align-items:center; gap:16px; }.nc-deal-card b { font-size:15px; }.nc-deal-card p { margin:5px 0 0; color:#8D97A3; font-size:12px; }.nc-deal-actions { display:flex; gap:8px; align-items:center; }.nc-deal-actions span { color:#E6A23C; font-size:12px; white-space:nowrap; }.nc-empty-state { display:flex; flex-direction:column; align-items:center; gap:8px; padding:36px; border:1px dashed #3A4552; border-radius:10px; color:#8D97A3; text-align:center; font-size:13px; }
+        .nc-plan-card { position:relative; }.nc-plan-card.is-recommended { border-color:#E6A23C; box-shadow:0 12px 30px rgba(230,162,60,.10); }.nc-best-value { color:#E6A23C; font-size:10px; font-weight:600; letter-spacing:1px; }.nc-price { color:#EDEFF2; font:500 25px "IBM Plex Mono",monospace; margin:16px 0 6px; }.nc-price small { font:12px "IBM Plex Sans",sans-serif; color:#8D97A3; }.nc-plan-users { color:#4FAE7E; font-size:12px; margin:16px 0; }.nc-plan-card button { width:100%; justify-content:center; }.nc-plan-card button:disabled { opacity:.58; cursor:default; }.nc-checkout-error { color:#D9534F; font-size:13px; margin-top:14px; }
         @media (max-width: 720px) {
-          .nc-layout { flex-direction: row !important; }
-          .nc-sidebar {
-            width: 56px !important;
-            padding: 10px 4px !important;
-            align-items: center !important;
-          }
-          .nc-sidebar-header { padding: 0 0 10px !important; justify-content: center; }
-          .nc-sidebar-header-text { display: none !important; }
-          .nc-sidebar-nav-item {
-            justify-content: center !important;
-            padding: 10px 4px !important;
-          }
-          .nc-sidebar-label { display: none !important; }
-          .nc-main-content { padding: 14px !important; }
-          .nc-form-grid { grid-template-columns: 1fr !important; }
+          .nc-layout { flex-direction: column !important; min-height:100svh !important; border-radius:0 !important; }
+          .nc-sidebar { width:100% !important; box-sizing:border-box; flex-direction:row !important; align-items:center !important; overflow-x:auto; padding:8px !important; gap:6px !important; border-right:0 !important; border-bottom:1px solid #2E3742; }
+          .nc-sidebar-header { flex:0 0 auto; padding:0 8px !important; }.nc-sidebar-header-text { display:block !important; max-width:110px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+          .nc-sidebar-nav-item,.nc-sidebar-logout,.nc-sidebar a { flex:0 0 auto; justify-content:flex-start !important; padding:9px 10px !important; font-size:12px !important; white-space:nowrap; }.nc-sidebar-label { display:inline !important; }
+          .nc-sidebar > div:nth-child(3) { display:flex !important; flex:0 0 auto; flex-direction:row !important; border:0 !important; padding:0 !important; margin:0 !important; }.nc-sidebar > div:nth-child(3) > .nc-sidebar-label,.nc-sidebar-spacer { display:none !important; }
+          .nc-main-content,.nc-premium-page { padding:18px 14px !important; }.nc-form-grid,.nc-deal-form,.nc-assurance-grid,.nc-plan-grid { grid-template-columns:1fr !important; }.nc-deal-card { align-items:flex-start; flex-direction:column; }.nc-premium-heading { flex-direction:column; }.nc-risk-chip { white-space:normal; }
         }
       `}</style>
       <div style={{ display: "flex", minHeight: 560, background: "#12161B", borderRadius: 10, overflow: "hidden" }} className="nc-layout">
@@ -3388,6 +3468,9 @@ export default function App() {
         </div>
         <div style={{ flex: 1, overflow: "auto" }} className="nc-main-content-wrap">
           {view === "dashboard" && <Dashboard data={data} setData={setData} />}
+          {view === "assurance" && <OperationsAssuranceView data={data} setData={setData} />}
+          {view === "marketplace" && <MarketplaceView data={data} setData={setData} />}
+          {view === "subscription" && <SubscriptionView data={data} setData={setData} />}
           {view === "ncplan" && <NCPlanView data={data} setData={setData} />}
           {view === "calendar" && <QuarterlyReportsView data={data} setData={setData} />}
           {view === "forecast" && <QuarterlyReportsView data={data} setData={setData} lockTab="forecast" />}
