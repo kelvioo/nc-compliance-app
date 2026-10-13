@@ -1,0 +1,11 @@
+# Edge function settings used by `supabase functions deploy`.
+project_id = "utexliymdbzevaamuhbf"
+
+[functions.billing]
+verify_jwt = false        # Paystack webhooks carry no Supabase JWT; the function checks auth itself
+
+[functions.send-email]
+verify_jwt = true
+
+[functions.deadline-reminders]
+verify_jwt = false        # called by pg_cron with a Vault secret

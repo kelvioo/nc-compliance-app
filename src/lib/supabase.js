@@ -6,8 +6,10 @@ const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 if (!supabaseUrl || !supabaseAnonKey) {
   console.error(
     "Missing Supabase configuration. Set VITE_SUPABASE_URL and " +
-    "VITE_SUPABASE_ANON_KEY as environment variables (see setup notes)."
+    "VITE_SUPABASE_ANON_KEY as environment variables (see README)."
   );
 }
 
-export const supabase = createClient(supabaseUrl, supabaseAnonKey);
+export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+  auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true },
+});
