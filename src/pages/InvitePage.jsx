@@ -26,7 +26,7 @@ export default function InvitePage() {
     const { data: orgId, error: err } = await supabase.rpc("accept_invitation", { p_token: token });
     if (err) { setError(friendlyError(err)); setBusy(false); return; }
     try { localStorage.setItem("nc_last_org", orgId); } catch { /* private mode */ }
-    navigate("/app/dashboard", { replace: true });
+    navigate("/app/home", { replace: true });
   };
 
   const next = encodeURIComponent(`/invite/${token}`);

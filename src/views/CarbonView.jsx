@@ -1,13 +1,15 @@
 import { useState } from "react";
+import { useAuth } from "../auth/AuthProvider";
 import { Plus, Trash2 } from "lucide-react";
 import { Field, inputStyle, btnPrimary } from "../components/ui";
 import { FUEL_TYPES, calcCarbon } from "../lib/compliance";
 
 export function CarbonView({ data, setData }) {
+  const { user } = useAuth();
   const carbonEntries = data.carbonEntries || [];
   const [form, setForm] = useState({
     date: new Date().toISOString().slice(0, 10), fuelType: FUEL_TYPES[0].id,
-    project: "", quantity: "", addedBy: "",
+    project: "", quantity: "", addedBy: user?.email || "",
   });
   const { totals, totalCo2e } = calcCarbon(carbonEntries);
 

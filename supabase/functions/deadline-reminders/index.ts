@@ -5,13 +5,17 @@
 //    (§60, due 60 days into the year) submission — same rules as the
 //    in-app compliance calendar.
 //  * Trial ending (3 and 1 day before) and plan expiry (30 and 7 days before).
+//  * Documents in the vault expiring in 30, 7 and 1 day(s).
+//  * A daily summary for the product owner (ADMIN_EMAIL): sign-ups, payments,
+//    trials about to end.
 //
 // Each reminder is claimed in reminder_log before sending, so it goes out at
 // most once per company, report, deadline and lead time even if the job runs
 // twice. Deployed with verify_jwt = false; callers must send the cron secret
 // stored in Vault (checked by public.verify_cron_secret).
 //
-// Secrets: RESEND_API_KEY, EMAIL_FROM, APP_URL. Without them it does a dry run.
+// Secrets: RESEND_API_KEY, EMAIL_FROM, APP_URL, ADMIN_EMAIL (optional).
+// Without the first three it does a dry run.
 import { createClient } from "npm:@supabase/supabase-js@2";
 
 const admin = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!, {
@@ -21,6 +25,8 @@ const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY") ?? "";
 const EMAIL_FROM = Deno.env.get("EMAIL_FROM") ?? "";
 const APP_URL = (Deno.env.get("APP_URL") ?? "").replace(/\/$/, "");
 const CAN_SEND = Boolean(RESEND_API_KEY && EMAIL_FROM && APP_URL);
+const ADMIN_EMAIL = Deno.env.get("ADMIN_EMAIL") ?? "";
+const DOC_LEADS = [30, 7, 1];
 
 const DAY = 86400000;
 const DEADLINE_LEADS = [14, 7, 3, 1];
@@ -188,6 +194,56 @@ Deno.serve(async (req) => {
           ), sent);
         }
       }
+    }
+  }
+
+  // Documents about to expire, grouped into one email per company per lead time.
+  const { data: expiring } = await admin.rpc("expiring_documents", { p_days: DOC_LEADS });
+  const orgById = new Map(((orgs ?? []) as Org[]).map((o) => [o.id, o]));
+  const docGroups = new Map<string, { org: Org; lead: number; docs: { id: string; title: string; expires_on: string }[] }>();
+  for (const d of (expiring ?? []) as { org_id: string; id: string; title: string; expires_on: string; days_left: number }[]) {
+    const org = orgById.get(d.org_id);
+    if (!org || !hasAccess(org, now)) continue;
+    const key = `${d.org_id}:${d.days_left}`;
+    if (!docGroups.has(key)) docGroups.set(key, { org, lead: d.days_left, docs: [] });
+    docGroups.get(key)!.docs.push(d);
+  }
+  for (const { org, lead, docs } of docGroups.values()) {
+    const subject = `${docs.length === 1 ? docs[0].title : `${docs.length} documents`} expire${docs.length === 1 ? "s" : ""} in ${lead} day${lead === 1 ? "" : "s"} — ${org.name}`;
+    planned.push(`${org.name}: ${subject}`);
+    if (!CAN_SEND) continue;
+    const html = layout(
+      "Documents expiring soon",
+      `<p style="line-height:1.6">These records for <strong>${escapeHtml(org.name)}</strong> expire in <strong>${lead} day${lead === 1 ? "" : "s"}</strong>. Start the renewal now so your NCDMB compliance isn't interrupted.</p>
+       <ul style="line-height:1.8">${docs.map((d) => `<li>${escapeHtml(d.title)} — ${pretty(Date.parse(d.expires_on))}</li>`).join("")}</ul>`,
+      { label: "Open documents", url: `${APP_URL}/app/documents` },
+    );
+    await remind(org, `docs:${docs.map((d) => d.id).sort().join(",").slice(0, 300)}`, Date.parse(docs[0].expires_on), lead, subject, html, sent);
+  }
+
+  // Daily summary for the product owner.
+  if (ADMIN_EMAIL && CAN_SEND) {
+    const since = new Date(now - DAY).toISOString();
+    const [{ data: newOrgs }, { data: paid }, { data: users }] = await Promise.all([
+      admin.from("organizations").select("name, org_type, created_at").gte("created_at", since),
+      admin.from("payments").select("amount_kobo, plan, organizations(name)").eq("status", "success").gte("paid_at", since),
+      admin.auth.admin.listUsers({ perPage: 1000 }),
+    ]);
+    const newUsers = (users?.users ?? []).filter((u) => u.created_at >= since).length;
+    const endingSoon = ((orgs ?? []) as Org[]).filter((o) => o.subscription_status === "trialing"
+      && Date.parse(o.trial_ends_at) > now && Date.parse(o.trial_ends_at) - now < 3 * DAY);
+    const revenue = (paid ?? []).reduce((sum, p: { amount_kobo: number }) => sum + Number(p.amount_kobo || 0), 0) / 100;
+    if ((newOrgs ?? []).length || (paid ?? []).length || newUsers || endingSoon.length) {
+      const list = (items: string[]) => items.length ? `<ul style="line-height:1.8">${items.map((i) => `<li>${escapeHtml(i)}</li>`).join("")}</ul>` : "<p>None.</p>";
+      const html = layout(
+        "Your daily NC Compliance summary",
+        `<p><strong>${(newOrgs ?? []).length}</strong> new companies · <strong>${newUsers}</strong> new users · <strong>₦${revenue.toLocaleString("en-NG")}</strong> revenue (last 24 hours)</p>
+         <h3 style="font-size:15px">New companies</h3>${list((newOrgs ?? []).map((o: { name: string; org_type: string }) => `${o.name} (${o.org_type})`))}
+         <h3 style="font-size:15px">Payments</h3>${list((paid ?? []).map((p: any) => `${p.organizations?.name ?? "?"} — ₦${(Number(p.amount_kobo) / 100).toLocaleString("en-NG")} (${p.plan})`))}
+         <h3 style="font-size:15px">Trials ending within 3 days</h3>${list(endingSoon.map((o) => `${o.name} — ends ${pretty(Date.parse(o.trial_ends_at.slice(0, 10)))}`))}`,
+        { label: "Open admin console", url: `${APP_URL}/admin` },
+      );
+      if (await sendEmail([ADMIN_EMAIL], `NC Compliance daily summary — ${iso(today)}`, html)) sent.push("admin digest");
     }
   }
 

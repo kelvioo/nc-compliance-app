@@ -1,36 +1,44 @@
 import { useState } from "react";
-import { NavLink, useNavigate } from "react-router-dom";
+import { Link, NavLink, useNavigate } from "react-router-dom";
 import {
   Gauge, FileText, Users, LogOut, TrendingUp, ClipboardList, ShieldCheck, Leaf, RefreshCw,
   Layers, Ship, Package, CalendarClock, CreditCard, AlertTriangle, Handshake, Settings,
-  UserPlus, ChevronDown, Plus, Building2,
+  UserPlus, ChevronDown, ChevronRight, Plus, Building2, Home, Send, FolderLock, LayoutDashboard,
 } from "lucide-react";
 import { supabase } from "../lib/supabase";
 import { roleLabel } from "../lib/roles";
+import { currentPeriod, reportById } from "../lib/reports";
+
+const MAIN_ITEMS = [
+  { id: "home", label: "Home", icon: Home },
+  { id: "submissions", label: "Submissions", icon: Send },
+  { id: "documents", label: "Documents", icon: FolderLock },
+];
 
 const DATA_ITEMS = [
   { id: "entries", label: "Spend log", icon: ClipboardList },
   { id: "quota", label: "Expat quota", icon: Users },
   { id: "carbon", label: "Carbon intensity", icon: Leaf },
-  { id: "report", label: "Report", icon: FileText },
+  { id: "dashboard", label: "NC position", icon: Gauge },
+  { id: "report", label: "NC summary report", icon: FileText },
 ];
 
 const REPORT_ITEMS = [
   { id: "calendar", label: "Compliance calendar", icon: CalendarClock },
-  { id: "ncplan", label: "NC Plan", icon: Layers },
-  { id: "ncdf", label: "NCDF & NCFCC (§104)", icon: ShieldCheck },
-  { id: "annual", label: "NC Performance Report (§60)", icon: TrendingUp },
   { id: "forecast", label: "Job Forecast (§18)", icon: FileText },
   { id: "procServices", label: "Procurement — Services (§24)", icon: FileText },
   { id: "procMaterials", label: "Procurement — Materials (§24)", icon: FileText },
-  { id: "marine", label: "Marine Services Utilization (§24)", icon: Ship },
-  { id: "insurance", label: "Insurance Report (§49)", icon: ShieldCheck },
-  { id: "legal", label: "Legal Services (§51)", icon: ShieldCheck },
-  { id: "financial", label: "Financial Services (§52)", icon: ShieldCheck },
+  { id: "marine", label: "Marine Services (§24)", icon: Ship },
+  { id: "annual", label: "NC Performance (§60)", icon: TrendingUp },
+  { id: "ncplan", label: "NC Plan", icon: Layers },
+  { id: "ncdf", label: "NCDF & NCFCC (§104)", icon: ShieldCheck },
   { id: "training", label: "Employment & Training (§29)", icon: Users },
   { id: "rnd", label: "R&D (§38/39)", icon: TrendingUp },
-  { id: "succession", label: "Succession Plan (§33)", icon: ClipboardList },
+  { id: "insurance", label: "Insurance (§49)", icon: ShieldCheck },
+  { id: "legal", label: "Legal Services (§51)", icon: ShieldCheck },
+  { id: "financial", label: "Financial Services (§52)", icon: ShieldCheck },
   { id: "tech", label: "Technology Transfer (§44/46)", icon: Package },
+  { id: "succession", label: "Succession Plan (§33)", icon: ClipboardList },
 ];
 
 const LAB_ITEMS = [
@@ -44,7 +52,9 @@ const ACCOUNT_ITEMS = [
   { id: "settings", label: "Settings", icon: Settings },
 ];
 
-function NavItem({ item }) {
+const REPORTS_OPEN_KEY = "nc_reports_open";
+
+function NavItem({ item, dot }) {
   const Icon = item.icon;
   return (
     <NavLink
@@ -54,17 +64,37 @@ function NavItem({ item }) {
     >
       <Icon size={16} />
       <span className="nc-sidebar-label">{item.label}</span>
+      {dot && <i className={`nc-dot nc-dot-${dot}`} title={dot.replace("_", " ")} />}
     </NavLink>
   );
 }
 
-export function Sidebar({ org, role, memberships, onSelectOrg, userEmail, onRefresh, refreshing, labsEnabled }) {
+export function Sidebar({ org, role, memberships, onSelectOrg, userEmail, onRefresh, refreshing, labsEnabled, isPlatformAdmin, submissions }) {
   const [switcherOpen, setSwitcherOpen] = useState(false);
+  const [reportsOpen, setReportsOpen] = useState(() => {
+    try { return localStorage.getItem(REPORTS_OPEN_KEY) !== "0"; } catch { return true; }
+  });
   const navigate = useNavigate();
 
   const signOut = async () => {
     await supabase.auth.signOut();
     navigate("/");
+  };
+
+  const toggleReports = () => {
+    setReportsOpen((o) => {
+      try { localStorage.setItem(REPORTS_OPEN_KEY, o ? "0" : "1"); } catch { /* private mode */ }
+      return !o;
+    });
+  };
+
+  // Status dot for the report's current period, so the list doubles as a
+  // progress board.
+  const dotFor = (id) => {
+    const r = reportById(id);
+    if (!r || id === "ncdf") return null;
+    const row = submissions?.byKey[`${id}:${currentPeriod(r).period}`];
+    return row?.status && row.status !== "draft" ? row.status : null;
   };
 
   return (
@@ -92,15 +122,15 @@ export function Sidebar({ org, role, memberships, onSelectOrg, userEmail, onRefr
         )}
       </div>
 
-      <NavItem item={{ id: "dashboard", label: "Dashboard", icon: Gauge }} />
+      {MAIN_ITEMS.map((it) => <NavItem key={it.id} item={it} />)}
 
-      <div className="nc-sidebar-group">
-        {DATA_ITEMS.map((it) => <NavItem key={it.id} item={it} />)}
-        <div className="nc-sidebar-label nc-sidebar-hint">Report pulls its numbers from these three</div>
-      </div>
+      <div className="nc-sidebar-section nc-sidebar-label">Track data</div>
+      {DATA_ITEMS.map((it) => <NavItem key={it.id} item={it} />)}
 
-      <div className="nc-sidebar-section nc-sidebar-label">NCDMB reports</div>
-      {REPORT_ITEMS.map((it) => <NavItem key={it.id} item={it} />)}
+      <button className="nc-sidebar-section nc-sidebar-label nc-section-toggle" onClick={toggleReports} aria-expanded={reportsOpen}>
+        NCDMB reports {reportsOpen ? <ChevronDown size={12} /> : <ChevronRight size={12} />}
+      </button>
+      {reportsOpen && REPORT_ITEMS.map((it) => <NavItem key={it.id} item={it} dot={dotFor(it.id)} />)}
 
       {labsEnabled && (
         <>
@@ -111,6 +141,9 @@ export function Sidebar({ org, role, memberships, onSelectOrg, userEmail, onRefr
 
       <div className="nc-sidebar-section nc-sidebar-label">Account</div>
       {ACCOUNT_ITEMS.map((it) => <NavItem key={it.id} item={it} />)}
+      {isPlatformAdmin && (
+        <Link to="/admin" className="nc-sidebar-nav-item nc-admin-link"><LayoutDashboard size={16} /> <span className="nc-sidebar-label">Admin console</span></Link>
+      )}
 
       <div className="nc-sidebar-spacer" />
 

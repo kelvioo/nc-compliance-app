@@ -14,6 +14,8 @@ const ACTION_LABELS = {
   "member.role_changed": "changed a member's role",
   "member.removed": "removed a team member",
   "billing.activated": "activated a paid plan",
+  "submission.status_changed": "updated a submission",
+  "admin.subscription_changed": "had their plan updated by NC Compliance",
 };
 
 function describe(entry) {
@@ -23,6 +25,7 @@ function describe(entry) {
   if (entry.action === "member.invited") return `invited ${d.email} as ${d.role}`;
   if (entry.action === "member.joined") return `joined as ${d.role}`;
   if (entry.action === "billing.activated") return `activated the ${d.plan} plan`;
+  if (entry.action === "submission.status_changed") return `moved ${d.report} (${d.period}) to ${d.status.replace("_", " ")}`;
   return base;
 }
 

@@ -12,6 +12,7 @@ import { FullPageLoader } from "./components/ui";
 // The workspace (all report screens) loads on demand, so the marketing
 // and sign-in pages stay light.
 const WorkspaceApp = lazy(() => import("./app/WorkspaceApp"));
+const AdminPage = lazy(() => import("./pages/AdminPage"));
 
 function RequireAuth({ children }) {
   const { user, loading } = useAuth();
@@ -37,8 +38,9 @@ export default function App() {
       <Route path="/invite/:token" element={<InvitePage />} />
       <Route path="/onboarding" element={<RequireAuth><Onboarding /></RequireAuth>} />
       <Route path="/billing/callback" element={<RequireAuth><BillingCallback /></RequireAuth>} />
-      <Route path="/app" element={<Navigate to="/app/dashboard" replace />} />
+      <Route path="/app" element={<Navigate to="/app/home" replace />} />
       <Route path="/app/:view" element={<RequireAuth><Suspense fallback={<FullPageLoader label="Loading your workspace…" />}><WorkspaceApp /></Suspense></RequireAuth>} />
+      <Route path="/admin" element={<RequireAuth><Suspense fallback={<FullPageLoader />}><AdminPage /></Suspense></RequireAuth>} />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );

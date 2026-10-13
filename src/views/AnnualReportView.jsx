@@ -5,7 +5,10 @@ import { CATS, JOB_FORECAST_THRESHOLD_USD, nextAnnual60DayDeadline, daysUntil, f
 // Section 60: Project Progress Performance Report, due within 60 days of
 // the start of the year. Pulls together the whole year's tracked figures.
 export function AnnualReportView({ data }) {
-  const [year, setYear] = useState(new Date().getFullYear());
+  // The §60 report filed early in a year covers the year before, so default
+  // to last year until the filing window (first 60 days) has passed.
+  const thisYear = new Date().getFullYear();
+  const [year, setYear] = useState(nextAnnual60DayDeadline(new Date()).getFullYear() - 1);
   const inYear = (dateStr) => dateStr && Number(dateStr.slice(0, 4)) === year;
 
   const yearEntries = (data.entries || []).filter((e) => inYear(e.date));
@@ -35,7 +38,7 @@ export function AnnualReportView({ data }) {
       <div className="no-print" style={{ display: "flex", gap: 12, alignItems: "end", marginBottom: 16, flexWrap: "wrap" }}>
         <Field label="Reporting year">
           <select style={inputStyle} value={year} onChange={(e) => setYear(Number(e.target.value))}>
-            {[year - 1, year, year + 1].map((y) => <option key={y} value={y}>{y}</option>)}
+            {[thisYear - 2, thisYear - 1, thisYear].map((y) => <option key={y} value={y}>{y}</option>)}
           </select>
         </Field>
       </div>
@@ -48,7 +51,7 @@ export function AnnualReportView({ data }) {
         </span>
       </div>
 
-      <NCDMBDocShell title={"NC PERFORMANCE REPORT (2025)\nProject Progress Performance Report — Section 60"}
+      <NCDMBDocShell title={`NC PERFORMANCE REPORT (${year})\nProject Progress Performance Report — Section 60`}
         companyName={data.name}
         meta={<div><strong>Reporting Year:</strong> {year}</div>}
         docLabel={`Generated ${today}`}

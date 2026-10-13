@@ -23,7 +23,7 @@ export default function Onboarding() {
     });
     if (err) { setError(friendlyError(err)); setBusy(false); return; }
     try { localStorage.setItem("nc_last_org", orgId); } catch { /* private mode */ }
-    navigate("/app/dashboard", { replace: true });
+    navigate("/app/home", { replace: true });
   };
 
   return (
@@ -66,7 +66,7 @@ export default function Onboarding() {
             <div className="nc-form-row">
               <button type="button" className="nc-link-button" onClick={() => setStep(1)}>Back</button>
               <button type="submit" style={btnPrimary} disabled={busy}>
-                {busy ? <Loader2 size={16} className="nc-spin" /> : null} Start my 14-day trial
+                {busy ? <Loader2 size={16} className="nc-spin" /> : null} Start my 30-day free trial
               </button>
             </div>
             <p className="nc-auth-legal">Joining a colleague's company instead? Open the invitation link they sent you.</p>

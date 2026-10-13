@@ -4,12 +4,12 @@ export const PLANS = [
   {
     id: "starter", name: "Starter", price: 150000, seats: 5,
     tagline: "For a single asset or a contractor's compliance desk.",
-    features: ["Spend log, expat quota & carbon tracking", "All 15 NCDMB statutory report templates", "Compliance calendar & deadline emails", "Up to 5 team members"],
+    features: ["All 15 NCDMB report templates", "Deadline calendar & email reminders", "Review & approval workflow", "Document vault with expiry alerts", "Up to 5 team members"],
   },
   {
     id: "operations", name: "Operations", price: 450000, seats: 25, recommended: true,
     tagline: "For operators and service companies with several teams.",
-    features: ["Everything in Starter", "Preparer → reviewer → approver roles", "Audit trail of every change", "Up to 25 team members"],
+    features: ["Everything in Starter", "Up to 25 team members", "Room for preparers, reviewers and approvers across departments", "Full audit trail and filing history"],
   },
   {
     id: "enterprise", name: "Enterprise", price: 1000000, seats: null,
@@ -18,7 +18,7 @@ export const PLANS = [
   },
 ];
 
-export const TRIAL_DAYS = 14;
+export const TRIAL_DAYS = 30;
 
 export function planName(id) {
   if (id === "trial") return "Free trial";

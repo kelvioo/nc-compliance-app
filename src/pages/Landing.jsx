@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
 import {
-  ArrowRight, CalendarClock, CheckCircle2, ClipboardList, FileText, ShieldCheck, Users, BellRing, History, Gauge,
+  ArrowRight, CalendarClock, CheckCircle2, ClipboardList, FileText, ShieldCheck, BellRing, History, Send, FolderLock,
 } from "lucide-react";
 import { useAuth } from "../auth/AuthProvider";
 import { PLANS, TRIAL_DAYS } from "../lib/plans";
@@ -9,12 +9,12 @@ import { Brand } from "../components/ui";
 import { SUPPORT_EMAIL } from "../lib/config";
 
 const FEATURES = [
-  { icon: ClipboardList, title: "One log, every report", text: "Record Nigerian vs foreign spend, expatriate positions, contracts and vessels once. Every NCDMB template pulls from the same data." },
-  { icon: FileText, title: "All 15 statutory templates", text: "Job Forecast (§18), Procurement and Marine (§24), Performance (§60), NC Plan, NCDF and more — laid out like NCDMB's own forms, ready to print or export." },
-  { icon: CalendarClock, title: "Never miss a deadline", text: "A live compliance calendar works out every quarterly and annual due date, and emails your team before each one." },
-  { icon: Users, title: "Built for teams", text: "Preparers enter data, reviewers check it, approvers sign off. Each person has their own login and role." },
-  { icon: History, title: "Audit trail", text: "See who changed which section and when. No more guessing which spreadsheet is the latest." },
-  { icon: Gauge, title: "Live NC position", text: "Your Nigerian Content percentage against target, with a forward forecast, always up to date on the dashboard." },
+  { icon: CalendarClock, title: "Never miss a deadline", text: "Every quarterly and annual NCDMB due date worked out for you, with email reminders to your team 14, 7, 3 and 1 day before." },
+  { icon: Send, title: "Prepare → review → approve → submit", text: "Each report moves through your team's sign-off, then you record the NCDMB submission and reference. A full filing history, always." },
+  { icon: FileText, title: "All 15 statutory templates", text: "Job Forecast (§18), Procurement and Marine (§24), Performance (§60), NC Plan, NCDF and more — laid out like NCDMB's own forms, ready to print." },
+  { icon: FolderLock, title: "Certificates that never lapse", text: "Store your NCEC certificate, expatriate quota approvals and NCDF receipts. We warn you 30 days before anything expires." },
+  { icon: ClipboardList, title: "One log, every report", text: "Record Nigerian vs foreign spend, contracts, expatriate positions and vessels once. Every template pulls from the same numbers." },
+  { icon: History, title: "Audit trail", text: "See who changed what, who approved it and when. Everyone signs in with their own account and role." },
 ];
 
 const STEPS = [

@@ -1,13 +1,15 @@
 import { useState } from "react";
+import { useAuth } from "../auth/AuthProvider";
 import { Plus, Trash2 } from "lucide-react";
 import { Field, inputStyle, btnPrimary } from "../components/ui";
 import { CATS, fmtNaira } from "../lib/compliance";
 
 export function EntriesView({ data, setData }) {
+  const { user } = useAuth();
   const rate = data.exchangeRate || 1600;
   const [form, setForm] = useState({
     date: new Date().toISOString().slice(0, 10), category: CATS[0].id,
-    vendor: "", amount: "", note: "", project: "", addedBy: "", currency: "NGN",
+    vendor: "", amount: "", note: "", project: "", addedBy: user?.email || "", currency: "NGN",
   });
 
   const addEntry = async (e) => {

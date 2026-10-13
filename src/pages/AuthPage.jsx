@@ -15,7 +15,7 @@ function safeNext(raw) {
 
 const COPY = {
   signin: { title: "Welcome back", sub: "Sign in to your compliance workspace.", cta: "Sign in" },
-  signup: { title: "Start your 14-day free trial", sub: "No card required. Set up your company in under two minutes.", cta: "Create account" },
+  signup: { title: "Start your 30-day free trial", sub: "No card required. Set up your company in under two minutes.", cta: "Create account" },
   forgot: { title: "Reset your password", sub: "We'll email you a link to choose a new one.", cta: "Send reset link" },
 };
 

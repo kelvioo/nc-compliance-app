@@ -22,6 +22,12 @@ import { ReportView } from "../views/ReportView";
 import { TeamView } from "../views/TeamView";
 import { BillingView } from "../views/BillingView";
 import { SettingsView } from "../views/SettingsView";
+import { HomeView } from "../views/HomeView";
+import { SubmissionsView } from "../views/SubmissionsView";
+import { DocumentsView } from "../views/DocumentsView";
+import { useSubmissions } from "./useSubmissions";
+import { ReportHeader } from "./ReportHeader";
+import { reportById } from "../lib/reports";
 import { OperationsAssuranceView } from "../views/labs/OperationsAssuranceView";
 import { MarketplaceView } from "../views/labs/MarketplaceView";
 
@@ -98,10 +104,16 @@ export default function WorkspaceApp() {
   const selectOrg = useCallback((id) => {
     setOrgIdState(id);
     try { localStorage.setItem(LAST_ORG_KEY, id); } catch { /* private mode */ }
-    navigate("/app/dashboard");
+    navigate("/app/home");
   }, [navigate]);
 
   const ws = useWorkspace(current?.organizations.id, { onError: notify });
+  const submissions = useSubmissions(current?.organizations.id, notify);
+  const [isPlatformAdmin, setIsPlatformAdmin] = useState(false);
+
+  useEffect(() => {
+    supabase.rpc("am_platform_admin").then(({ data }) => setIsPlatformAdmin(Boolean(data)));
+  }, []);
 
   if (!memberships) return <FullPageLoader label="Loading your workspace…" />;
   if (memberships.length === 0) return <Navigate to="/onboarding" replace />;
@@ -112,13 +124,16 @@ export default function WorkspaceApp() {
   const editable = canEdit(role) && access.hasAccess;
 
   const accountViews = {
+    submissions: () => <SubmissionsView submissions={submissions} />,
+    documents: () => <DocumentsView org={org} editable={editable} notify={notify} />,
     team: () => <TeamView org={org} role={role} notify={notify} onChanged={loadMemberships} />,
     billing: () => <BillingView org={org} role={role} notify={notify} />,
     settings: () => <SettingsView org={org} role={role} notify={notify} onSaved={loadMemberships} />,
   };
 
   const isReportView = Boolean(REPORT_VIEWS[view]);
-  if (!isReportView && !accountViews[view]) return <Navigate to="/app/dashboard" replace />;
+  const isHome = view === "home";
+  if (!isHome && !isReportView && !accountViews[view]) return <Navigate to="/app/home" replace />;
 
   // Viewers and expired workspaces can browse everything but not save.
   const guardedSetData = (next) => {
@@ -131,12 +146,12 @@ export default function WorkspaceApp() {
 
   const handleRefresh = async () => {
     setRefreshing(true);
-    await Promise.all([ws.reload(), loadMemberships()]);
+    await Promise.all([ws.reload(), loadMemberships(), submissions.reload()]);
     setRefreshing(false);
   };
 
   let body;
-  if (!isReportView) {
+  if (!isReportView && !isHome) {
     body = accountViews[view]();
   } else if (ws.loadError) {
     body = <div className="nc-main-content"><p className="nc-checkout-error">{ws.loadError}</p></div>;
@@ -144,7 +159,18 @@ export default function WorkspaceApp() {
     body = <div className="nc-inline-loader">Loading workspace…</div>;
   } else {
     const data = { ...ws.data, id: org.id, name: org.name };
-    body = REPORT_VIEWS[view]({ data, setData: guardedSetData });
+    if (isHome) {
+      body = <HomeView data={data} org={org} submissions={submissions} />;
+    } else {
+      body = (
+        <>
+          {reportById(view) && (
+            <ReportHeader reportId={view} role={role} submissions={submissions} editable={editable} notify={notify} />
+          )}
+          {REPORT_VIEWS[view]({ data, setData: guardedSetData })}
+        </>
+      );
+    }
   }
 
   return (
@@ -160,6 +186,8 @@ export default function WorkspaceApp() {
           onRefresh={handleRefresh}
           refreshing={refreshing}
           labsEnabled={LABS_ENABLED}
+          isPlatformAdmin={isPlatformAdmin}
+          submissions={submissions}
         />
       </div>
       <div className="nc-main-content-wrap">

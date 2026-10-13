@@ -76,7 +76,7 @@ export function TeamView({ org, role, notify, onChanged }) {
     if (!window.confirm(prompt)) return;
     const { error } = await supabase.rpc("remove_member", { p_org: org.id, p_user: member.user_id });
     if (error) { notify(friendlyError(error)); return; }
-    if (self) { await onChanged(); navigate("/app/dashboard"); return; }
+    if (self) { await onChanged(); navigate("/app/home"); return; }
     notify("Removed from the team.", "success");
     load();
   };

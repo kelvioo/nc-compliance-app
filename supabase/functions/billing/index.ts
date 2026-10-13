@@ -9,12 +9,16 @@
 // Supabase JWT; user actions check the JWT themselves below.
 //
 // Secrets: PAYSTACK_SECRET_KEY (required to take payments).
+//          ADMIN_EMAIL, RESEND_API_KEY, EMAIL_FROM (optional: email the owner on each payment).
 import { createClient, type User } from "npm:@supabase/supabase-js@2";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const PAYSTACK_SECRET = Deno.env.get("PAYSTACK_SECRET_KEY") ?? "";
 const PAYSTACK_API = "https://api.paystack.co";
+const ADMIN_EMAIL = Deno.env.get("ADMIN_EMAIL") ?? "";
+const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY") ?? "";
+const EMAIL_FROM = Deno.env.get("EMAIL_FROM") ?? "";
 
 const admin = createClient(SUPABASE_URL, SERVICE_KEY, { auth: { persistSession: false } });
 
@@ -36,6 +40,26 @@ async function paystack(path: string, init: RequestInit = {}) {
   const body = await res.json().catch(() => ({}));
   if (!res.ok || body.status === false) throw new Error(body.message || `Paystack error ${res.status}`);
   return body.data;
+}
+
+// Best effort: tell the product owner a payment landed.
+async function notifyAdmin(orgName: string, planId: string, amountKobo: number, reference: string) {
+  if (!ADMIN_EMAIL || !RESEND_API_KEY || !EMAIL_FROM) return;
+  const naira = (amountKobo / 100).toLocaleString("en-NG");
+  const esc = (s: string) => s.replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]!));
+  try {
+    await fetch("https://api.resend.com/emails", {
+      method: "POST",
+      headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
+      body: JSON.stringify({
+        from: EMAIL_FROM, to: [ADMIN_EMAIL],
+        subject: `New payment: ₦${naira} from ${orgName}`,
+        html: `<p><strong>${esc(orgName)}</strong> paid <strong>₦${naira}</strong> for the <strong>${esc(planId)}</strong> plan.</p><p>Reference: ${esc(reference)}</p>`,
+      }),
+    });
+  } catch (err) {
+    console.error("admin notification failed", err);
+  }
 }
 
 async function isBillingManager(orgId: string, userId: string) {
@@ -70,7 +94,7 @@ async function activate(tx: any) {
   if (!claimed || claimed.length === 0) return { ok: true, plan: planId, already: true };
 
   const { data: org } = await admin.from("organizations")
-    .select("subscription_status, current_period_end").eq("id", orgId).single();
+    .select("name, subscription_status, current_period_end").eq("id", orgId).single();
   const now = new Date();
   const currentEnd = org?.current_period_end ? new Date(org.current_period_end) : null;
   // Paying early stacks the new year on top of the time already paid for.
@@ -91,6 +115,7 @@ async function activate(tx: any) {
     action: "billing.activated",
     detail: { plan: planId, reference, amount_kobo: tx.amount, period_end: end.toISOString() },
   });
+  await notifyAdmin(org?.name ?? orgId, planId, Number(tx.amount), reference);
   return { ok: true, plan: planId };
 }
 
