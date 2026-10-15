@@ -257,7 +257,8 @@ body { font-family: "IBM Plex Sans", sans-serif; color: var(--nc-text); }
 .nc-admin { min-height:100svh; background:var(--nc-bg); color:var(--nc-text); }
 .nc-admin-top { display:flex; align-items:center; gap:14px; padding:14px 24px; border-bottom:1px solid var(--nc-line); background:var(--nc-bg-deep); }
 .nc-admin-badge { font-size:11px; font-weight:600; letter-spacing:.8px; text-transform:uppercase; color:var(--nc-amber); border:1px solid rgba(230,162,60,.4); border-radius:20px; padding:3px 10px; }
-.nc-admin-top-actions { margin-left:auto; display:flex; gap:8px; }
+.nc-admin-top-actions { margin-left:auto; display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
+.nc-admin-user { color:var(--nc-muted); font-size:12px; padding:0 4px; }
 .nc-admin-tabs { display:flex; gap:4px; padding:10px 24px 0; border-bottom:1px solid var(--nc-line); overflow-x:auto; }
 .nc-admin-tabs button { display:flex; align-items:center; gap:7px; padding:10px 14px; border:none; border-bottom:2px solid transparent; background:none; color:var(--nc-muted); font:13px "IBM Plex Sans",sans-serif; cursor:pointer; white-space:nowrap; }
 .nc-admin-tabs button.is-active { color:var(--nc-text); border-bottom-color:var(--nc-amber); }

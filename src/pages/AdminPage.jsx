@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { Link } from "react-router-dom";
-import { ArrowLeft, Building2, Users, CreditCard, Activity, LayoutDashboard, Search, RefreshCw } from "lucide-react";
+import { Link, useNavigate } from "react-router-dom";
+import { ArrowLeft, Building2, Users, CreditCard, Activity, LayoutDashboard, Search, RefreshCw, LogOut } from "lucide-react";
 import { supabase } from "../lib/supabase";
+import { useAuth } from "../auth/AuthProvider";
 import { friendlyError } from "../lib/errors";
 import { planName } from "../lib/plans";
 import { fmtNaira } from "../lib/compliance";
@@ -122,6 +123,13 @@ export default function AdminPage() {
     setLoading(false);
   }, [notify]);
 
+  const { user } = useAuth();
+  const navigate = useNavigate();
+  const signOut = async () => {
+    await supabase.auth.signOut();
+    navigate("/login", { replace: true });
+  };
+
   useEffect(() => {
     supabase.rpc("am_platform_admin").then(({ data }) => {
       setAllowed(Boolean(data));
@@ -147,6 +155,7 @@ export default function AdminPage() {
       <div className="nc-auth-page"><div className="nc-auth-card">
         <Brand /><h1>Not authorised</h1><p className="nc-auth-sub">This page is only for the NC Compliance team.</p>
         <Link to="/app">Back to your workspace</Link>
+        <button className="nc-link-button" onClick={signOut}>Sign out</button>
       </div></div>
     );
   }
@@ -173,6 +182,8 @@ export default function AdminPage() {
         <div className="nc-admin-top-actions">
           <button className="nc-btn-sm is-ghost" onClick={load} disabled={loading}><RefreshCw size={13} className={loading ? "nc-spin" : undefined} /> Refresh</button>
           <Link to="/app" className="nc-btn-sm is-ghost"><ArrowLeft size={13} /> My workspace</Link>
+          <span className="nc-admin-user" title="Signed in as">{user?.email}</span>
+          <button className="nc-btn-sm is-ghost" onClick={signOut}><LogOut size={13} /> Sign out</button>
         </div>
       </header>
 
