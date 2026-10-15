@@ -7,6 +7,7 @@ import ResetPassword from "./pages/ResetPassword";
 import Onboarding from "./pages/Onboarding";
 import InvitePage from "./pages/InvitePage";
 import BillingCallback from "./pages/BillingCallback";
+import LegalPage from "./pages/LegalPage";
 import { FullPageLoader } from "./components/ui";
 
 // The workspace (all report screens) loads on demand, so the marketing
@@ -35,6 +36,8 @@ export default function App() {
       <Route path="/login" element={<AuthPage mode="signin" />} />
       <Route path="/signup" element={<AuthPage mode="signup" />} />
       <Route path="/forgot-password" element={<AuthPage mode="forgot" />} />
+      <Route path="/privacy" element={<LegalPage doc="privacy" />} />
+      <Route path="/terms" element={<LegalPage doc="terms" />} />
       <Route path="/invite/:token" element={<InvitePage />} />
       <Route path="/onboarding" element={<RequireAuth><Onboarding /></RequireAuth>} />
       <Route path="/billing/callback" element={<RequireAuth><BillingCallback /></RequireAuth>} />

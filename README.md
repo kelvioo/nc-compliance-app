@@ -78,8 +78,9 @@ npm run lint && npm run build
 6. Apply `supabase/migrations/20261013090200_remove_member.sql` (it needs
    approval because it contains a `DELETE`). Until it's applied, "Remove" and "Leave"
    on the Team page won't work.
-7. Publish a privacy policy and terms of service, and review them against the Nigeria
-   Data Protection Act 2023.
+7. The privacy policy (`/privacy`) and terms (`/terms`) live in `src/pages/LegalPage.jsx`.
+   Set `VITE_SUPPORT_EMAIL` so they show a contact address, and have them reviewed by a
+   Nigerian lawyer against the Nigeria Data Protection Act 2023.
 
 ## Labs
 

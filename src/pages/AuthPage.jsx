@@ -124,7 +124,7 @@ export default function AuthPage({ mode }) {
               {mode === "forgot" && <Link to={`/login${keepNext}`}>Back to sign in</Link>}
             </div>
             {mode === "signup" && (
-              <p className="nc-auth-legal">By creating an account you agree to use NC Compliance for your organisation's own reporting. You remain responsible for the accuracy of what you submit to NCDMB.</p>
+              <p className="nc-auth-legal">By creating an account you agree to our <Link to="/terms" target="_blank">Terms of service</Link> and <Link to="/privacy" target="_blank">Privacy policy</Link>. You remain responsible for the accuracy of what you submit to NCDMB.</p>
             )}
           </>
         )}

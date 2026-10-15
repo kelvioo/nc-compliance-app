@@ -7,6 +7,7 @@ import { PLANS, TRIAL_DAYS } from "../lib/plans";
 import { STATUTORY_REPORTS, fmtNaira, getQuarterOptions, nextQuarterly30DayDeadline, daysUntil } from "../lib/compliance";
 import { Brand } from "../components/ui";
 import { SUPPORT_EMAIL } from "../lib/config";
+import { LegalFooter } from "./LegalPage";
 
 const FEATURES = [
   { icon: CalendarClock, title: "Never miss a deadline", text: "Every quarterly and annual NCDMB due date worked out for you, with email reminders to your team 14, 7, 3 and 1 day before." },
@@ -172,11 +173,7 @@ export default function Landing() {
         <Link to="/signup" className="nc-btn nc-btn-primary nc-btn-lg">Start free trial <ArrowRight size={18} /></Link>
       </section>
 
-      <footer className="nc-landing-footer">
-        <Brand size={14} />
-        <span>Independent software. Not affiliated with or endorsed by NCDMB.</span>
-        <span>© {new Date().getFullYear()} NC Compliance</span>
-      </footer>
+      <LegalFooter />
     </div>
   );
 }
