@@ -79,7 +79,8 @@ npm run lint && npm run build
    approval because it contains a `DELETE`). Until it's applied, "Remove" and "Leave"
    on the Team page won't work.
 7. The privacy policy (`/privacy`) and terms (`/terms`) live in `src/pages/LegalPage.jsx`.
-   Set `VITE_SUPPORT_EMAIL` so they show a contact address, and have them reviewed by a
+   The contact address defaults to `support@nccompliance.com.ng` (override with
+   `VITE_SUPPORT_EMAIL`). Have them reviewed by a
    Nigerian lawyer against the Nigeria Data Protection Act 2023.
 
 ## Labs

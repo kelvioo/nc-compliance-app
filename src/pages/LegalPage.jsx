@@ -174,7 +174,7 @@ function Terms() {
         <li>Plans are billed yearly in Nigerian naira at the prices shown on our website when you buy. Payment is through Paystack, or by invoice where we agree.</li>
         <li>A plan runs for 12 months from payment. If you renew before it ends, the new year starts when the current one finishes, so you lose no paid time.</li>
         <li>Plans <strong>do not renew automatically</strong>. We email you before your plan ends. If you don't renew, the workspace becomes read-only and your data is kept.</li>
-        <li>If you are unhappy within 14 days of your first payment, contact us for a full refund. Otherwise fees are non-refundable, except where Nigerian law requires a refund.</li>
+        <li>If you are unhappy within 7 days of your first payment, contact us for a full refund. Otherwise fees are non-refundable, except where Nigerian law requires a refund.</li>
         <li>We may change prices for future periods. Any change applies from your next renewal, never to a period you have already paid for.</li>
       </ul>
 
@@ -260,6 +260,7 @@ export function LegalFooter() {
       <Brand size={14} />
       <span>Independent software. Not affiliated with or endorsed by NCDMB.</span>
       <span className="nc-footer-links">
+        {SUPPORT_EMAIL && <a href={`mailto:${SUPPORT_EMAIL}`}>Contact</a>}
         <Link to="/privacy">Privacy</Link>
         <Link to="/terms">Terms</Link>
         <span>© {new Date().getFullYear()} NC Compliance</span>
