@@ -196,19 +196,6 @@ export function calcForecast(entries) {
 // strip (board name | version/date | page label). Every generated report
 // wraps its content in this so printouts look consistent with NCDMB's own
 // paperwork.
-export function tableToCSV(headers, rows) {
-  const esc = (v) => `"${String(v).replace(/"/g, '""')}"`;
-  return [headers.map(esc).join(","), ...rows.map((r) => r.map(esc).join(","))].join("\r\n");
-}
-
-export function downloadCSV(filename, headers, rows) {
-  const blob = new Blob([tableToCSV(headers, rows)], { type: "text/csv;charset=utf-8;" });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url; a.download = filename; a.click();
-  URL.revokeObjectURL(url);
-}
-
 export function calcCarbon(carbonEntries) {
   const totals = {};
   FUEL_TYPES.forEach((f) => (totals[f.id] = { quantity: 0, co2e: 0 }));

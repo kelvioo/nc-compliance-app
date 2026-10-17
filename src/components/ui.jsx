@@ -1,5 +1,4 @@
-import { FileText } from "lucide-react";
-import { downloadCSV } from "../lib/compliance";
+import ExportBar from "./ExportBar";
 
 export function Gauge_({ pct, target }) {
   const clamped = Math.max(0, Math.min(100, pct));
@@ -174,19 +173,11 @@ export function PlanTable({ headers, rows }) {
   );
 }
 
-export function NCDMBDocShell({ title, companyName, meta, docLabel, children, csv }) {
+export function NCDMBDocShell({ title, companyName, meta, docLabel, children, fileName }) {
+  const firstLine = String(title).split("\n")[0];
   return (
     <div>
-      <div className="no-print" style={{ display: "flex", gap: 10, marginBottom: 14 }}>
-        <button onClick={() => window.print()} style={btnPrimary}>
-          <FileText size={14} /> Print / save as PDF
-        </button>
-        {csv && (
-          <button onClick={() => downloadCSV(csv.filename, csv.headers, csv.rows)} style={btnGhost}>
-            <FileText size={14} /> Download (Excel/CSV)
-          </button>
-        )}
-      </div>
+      <ExportBar fileName={fileName || `${companyName || "Company"} - ${firstLine}`} sheetName={firstLine} />
       <div id="printable" style={{ background: "#fff", color: "#111", padding: "40px 44px",
         maxWidth: 800, fontFamily: "'IBM Plex Sans', sans-serif", border: "1px solid #2E3742", borderRadius: 10 }}>
         <div style={{ textAlign: "center", marginBottom: 18 }}>

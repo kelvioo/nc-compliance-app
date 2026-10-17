@@ -19,6 +19,14 @@
     box-shadow: none !important;
   }
 }
+.nc-whatsapp { position:fixed; right:20px; bottom:20px; z-index:50; display:flex; align-items:center; gap:8px; padding:10px 16px 10px 12px; border-radius:999px; background:#25D366; color:#fff; font:600 14px "IBM Plex Sans",sans-serif; text-decoration:none; box-shadow:0 6px 20px rgba(0,0,0,.35); }
+.nc-whatsapp:hover { background:#1EBE5A; }
+@media (max-width: 640px) { .nc-whatsapp span { display:none; } .nc-whatsapp { padding:12px; right:16px; bottom:16px; } }
+.nc-export-bar { display:flex; gap:10px; margin-bottom:14px; flex-wrap:wrap; align-items:center; }
+.nc-export-bar button:disabled { opacity:.6; cursor:wait; }
+.nc-export-error { color:#F2B8B5; font-size:12px; }
+.nc-export-page, .nc-export-page * { color:#000 !important; border-color:#999 !important; box-shadow:none !important; }
+.nc-export-page { background:#fff !important; border:none !important; padding:32px 36px !important; }
 .nc-premium-page { padding: 28px; font-family: "IBM Plex Sans", sans-serif; }
 .nc-premium-heading { display:flex; justify-content:space-between; gap:16px; align-items:flex-start; margin-bottom:24px; }
 .nc-premium-heading > div > span { color:#E6A23C; font-size:11px; font-weight:600; letter-spacing:1.2px; }

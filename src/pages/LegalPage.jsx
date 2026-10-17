@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { Brand } from "../components/ui";
 import { SUPPORT_EMAIL } from "../lib/config";
 import { TRIAL_DAYS } from "../lib/plans";
+import WhatsAppButton from "../components/WhatsAppButton";
 
 const UPDATED = "15 October 2026";
 const SITE = "nccompliance.com.ng";
@@ -250,6 +251,7 @@ export default function LegalPage({ doc }) {
         </p>
       </article>
       <LegalFooter />
+      <WhatsAppButton />
     </div>
   );
 }

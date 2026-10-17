@@ -1,6 +1,7 @@
 import { useState } from "react";
-import { FileText, ClipboardList, X } from "lucide-react";
+import { ClipboardList, X } from "lucide-react";
 import { Field, inputStyle, btnGhost } from "../components/ui";
+import ExportBar from "../components/ExportBar";
 import { CATS, FUEL_TYPES, fmtNaira, calcTotals, calcCarbon, downloadCsv } from "../lib/compliance";
 
 export function ReportView({ data }) {
@@ -17,10 +18,7 @@ export function ReportView({ data }) {
           fontSize: 20, color: "#EDEFF2", margin: 0 }}>Compliance report</h1>
         <div className="no-print" style={{ display: "flex", gap: 8 }}>
           <button onClick={() => downloadCsv(filtered, data.name)} style={btnGhost}>
-            <ClipboardList size={14} /> Export CSV
-          </button>
-          <button onClick={() => window.print()} style={btnGhost}>
-            <FileText size={14} /> Print / save as PDF
+            <ClipboardList size={14} /> Raw spend log (CSV)
           </button>
         </div>
       </div>
@@ -39,6 +37,7 @@ export function ReportView({ data }) {
         )}
       </div>
 
+      <ExportBar fileName={`${data.name || "Company"} - NC compliance report${from || to ? ` ${from || "start"} to ${to || "today"}` : ""}`} sheetName="Compliance report" />
       <div id="printable" style={{ background: "#1A2028", border: "1px solid #2E3742",
         borderRadius: 10, padding: 32, maxWidth: 640 }}>
         <div style={{ borderBottom: "1px solid #2E3742", paddingBottom: 16, marginBottom: 20 }}>

@@ -638,8 +638,7 @@ export function QuarterlyReportsView({ data, setData, lockTab }) {
           <NCDMBDocShell
             title={activeReport.title}
             companyName={data.name}
-            csv={{ filename: `${reportType}-${selectedQuarter.id}.csv`, headers: activeReport.headers,
-              rows: activeReport.rows.map(activeReport.rowsFn) }}
+            fileName={`${data.name || "Company"} - ${activeReport.label.split(" — ")[0]} - ${selectedQuarter.quarterLabel}`}
             meta={<>
               <div><strong>Period of Submission:</strong> {selectedQuarter.quarterLabel} ({selectedQuarter.rangeLabel})</div>
             </>}

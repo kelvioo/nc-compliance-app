@@ -150,9 +150,6 @@ export function NCDFView({ data, setData }) {
 
       <NCDMBDocShell title={"NCDF COMPLIANCE STATUS\n(Section 104 — 1% Nigeria Content Development Fund)"}
         companyName={data.name}
-        csv={{ filename: "ncdf-remittances.csv", headers: ["Contract", "Contract Value (USD)", "1% Due", "Remitted", "Status", "Reference", "Date"],
-          rows: ncdf.remittances.map((r) => [r.contractDescription, r.contractValueUsd, r.contractValueUsd * 0.01, r.amountRemitted,
-            r.amountRemitted < r.contractValueUsd * 0.01 ? "Short-paid" : "Fully remitted", r.reference, r.date]) }}
         meta={<>
           <div><strong>NCFCC Certificate No.:</strong> {cert.certificateNumber || "—"}</div>
           <div><strong>Issue Date:</strong> {cert.issueDate || "—"} &nbsp; <strong>Expiry Date:</strong> {cert.expiryDate || "—"}</div>

@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Plus, FileText, Users, Building2, Trash2, Layers, Ship, HardHat, Package } from "lucide-react";
 import { Field, inputStyle, btnPrimary, PlanSectionTitle, PlanRow, PlanEmpty, PlanTable } from "../components/ui";
+import ExportBar from "../components/ExportBar";
 import { PROCUREMENT_CATEGORIES, AWARD_TYPES, BID_PLATFORMS, blankNCPlan, calcTotals } from "../lib/compliance";
 
 export function NCPlanTab({ active, onClick, icon: Icon, label }) {
@@ -350,11 +351,7 @@ export function NCPlanView({ data, setData }) {
 
       {section === "preview" && (
         <>
-          <div className="no-print" style={{ marginBottom: 16 }}>
-            <button onClick={() => window.print()} style={btnPrimary}>
-              <FileText size={14} /> Print / save as PDF
-            </button>
-          </div>
+          <ExportBar fileName={`${data.name || "Company"} - Nigerian Content Plan`} sheetName="NC Plan" />
           <div id="printable" style={{ background: "#1A2028", border: "1px solid #2E3742",
             borderRadius: 10, padding: 32, maxWidth: 700 }}>
             <div style={{ borderBottom: "1px solid #2E3742", paddingBottom: 16, marginBottom: 20 }}>
