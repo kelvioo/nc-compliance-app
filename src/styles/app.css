@@ -46,7 +46,7 @@ body { font-family: "IBM Plex Sans", sans-serif; color: var(--nc-text); }
 .nc-fullpage-loader, .nc-inline-loader { min-height: 60vh; display:flex; align-items:center; justify-content:center; color:var(--nc-muted); font-size:14px; }
 .nc-fullpage-loader { min-height:100svh; background:var(--nc-bg); }
 .nc-brand { display:inline-flex; align-items:center; gap:9px; color:var(--nc-text); text-decoration:none; }
-.nc-brand-mark { display:inline-flex; align-items:center; justify-content:center; border-radius:7px; background:var(--nc-amber); color:#1A1103; font:600 11px "IBM Plex Mono",monospace; letter-spacing:.5px; }
+.nc-brand-mark { display:block; flex:none; }
 .nc-brand-name { font:600 16px Oswald,sans-serif; letter-spacing:1px; text-transform:uppercase; }
 .nc-card { background:var(--nc-card); border:1px solid var(--nc-line); border-radius:10px; padding:18px; }
 .nc-section-title { color:var(--nc-text); font:500 15px "IBM Plex Sans",sans-serif; margin:28px 0 10px; }

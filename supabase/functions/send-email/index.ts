@@ -15,6 +15,7 @@ const admin = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE
 const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY") ?? "";
 const EMAIL_FROM = Deno.env.get("EMAIL_FROM") ?? "";
 const APP_URL = Deno.env.get("APP_URL") ?? "";
+const LOGO_URL = `${(APP_URL || "https://nccompliance.com.ng").replace(/\/$/, "")}/email-logo.png`;
 
 const CORS = {
   "Access-Control-Allow-Origin": "*",
@@ -30,7 +31,7 @@ const escapeHtml = (s: string) =>
 function layout(title: string, bodyHtml: string, cta?: { label: string; url: string }) {
   return `<!doctype html><html><body style="margin:0;background:#f4f5f7;font-family:Arial,Helvetica,sans-serif;color:#1d2329">
   <div style="max-width:560px;margin:0 auto;padding:32px 16px">
-    <div style="font-weight:bold;letter-spacing:1px;color:#b97a1c;margin-bottom:16px">NC COMPLIANCE</div>
+    <div style="margin-bottom:16px"><img src="${LOGO_URL}" width="190" height="39" alt="NC Compliance" style="display:block;border:0"></div>
     <div style="background:#fff;border-radius:10px;padding:28px;border:1px solid #e3e6ea">
       <h1 style="font-size:20px;margin:0 0 14px">${escapeHtml(title)}</h1>
       ${bodyHtml}

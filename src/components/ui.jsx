@@ -255,10 +255,24 @@ export function FullPageLoader({ label = "Loading…" }) {
   return <div className="nc-fullpage-loader">{label}</div>;
 }
 
+export function BrandMark({ size = 26 }) {
+  return (
+    <svg className="nc-brand-mark" width={size} height={size} viewBox="0 0 64 64" aria-hidden="true">
+      <defs>
+        <linearGradient id="ncDrop" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stopColor="#F2B655" /><stop offset="1" stopColor="#D98E22" />
+        </linearGradient>
+      </defs>
+      <path d="M32 4C32 4 12 26.5 12 40a20 20 0 0 0 40 0C52 26.5 32 4 32 4z" fill="url(#ncDrop)" />
+      <path d="M22.5 40.5l6.5 6.5 13-14" fill="none" stroke="#14181D" strokeWidth="5.5" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
 export function Brand({ size = 18 }) {
   return (
     <span className="nc-brand">
-      <span className="nc-brand-mark" style={{ width: size + 8, height: size + 8 }}>NC</span>
+      <BrandMark size={size + 10} />
       <span className="nc-brand-name">NC Compliance</span>
     </span>
   );
