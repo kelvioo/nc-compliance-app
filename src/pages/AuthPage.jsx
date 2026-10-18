@@ -4,6 +4,7 @@ import { Loader2, MailCheck } from "lucide-react";
 import { supabase } from "../lib/supabase";
 import { useAuth } from "../auth/AuthProvider";
 import { Brand, Field, inputStyle, btnPrimary } from "../components/ui";
+import { usePageMeta } from "../lib/usePageMeta";
 
 const GOOGLE_ENABLED = import.meta.env.VITE_ENABLE_GOOGLE_AUTH === "true";
 
@@ -28,6 +29,10 @@ export default function AuthPage({ mode }) {
   const [password, setPassword] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
+  usePageMeta(
+    mode === "signup" ? "Start your free trial · NC Compliance" : mode === "forgot" ? "Reset password · NC Compliance" : "Sign in · NC Compliance",
+    mode === "signup" ? "/signup" : mode === "forgot" ? "/forgot-password" : "/login",
+  );
   const [sentTo, setSentTo] = useState(null);
 
   if (!loading && user && mode !== "forgot") return <Navigate to={next || "/app"} replace />;

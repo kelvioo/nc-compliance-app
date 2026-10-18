@@ -1,0 +1,9 @@
+User-agent: *
+Allow: /
+Disallow: /app
+Disallow: /admin
+Disallow: /onboarding
+Disallow: /billing/
+Disallow: /invite/
+
+Sitemap: https://nccompliance.com.ng/sitemap.xml

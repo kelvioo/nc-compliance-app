@@ -4,6 +4,7 @@ import { Brand } from "../components/ui";
 import { SUPPORT_EMAIL } from "../lib/config";
 import { TRIAL_DAYS } from "../lib/plans";
 import WhatsAppButton from "../components/WhatsAppButton";
+import { usePageMeta } from "../lib/usePageMeta";
 
 const UPDATED = "15 October 2026";
 const SITE = "nccompliance.com.ng";
@@ -59,7 +60,7 @@ function Privacy() {
       <p>We use these service providers. Each one processes data only on our instructions:</p>
       <ul>
         <li><strong>Supabase:</strong> database, sign-in and file storage, hosted in London, United Kingdom.</li>
-        <li><strong>Vercel:</strong> website hosting and delivery.</li>
+        <li><strong>Vercel:</strong> website hosting and delivery, and anonymous visit statistics (pages viewed, country and device type, with no cookies and nothing that identifies you).</li>
         <li><strong>Resend:</strong> sending emails, from servers in Ireland (EU).</li>
         <li><strong>Paystack:</strong> card and bank payments, in Nigeria.</li>
       </ul>
@@ -112,7 +113,7 @@ function Privacy() {
 
       <h2>9. Cookies and local storage</h2>
       <p>
-        We do not use advertising or tracking cookies. Your browser stores a sign-in session and a few preferences,
+        We do not use advertising or tracking cookies. We count visits with Vercel Web Analytics, which sets no cookies and does not identify you. Your browser stores a sign-in session and a few preferences,
         such as the last company you opened, so the app works. These are strictly necessary and need no consent.
       </p>
 
@@ -228,11 +229,8 @@ function Terms() {
 }
 
 export default function LegalPage({ doc }) {
-  useEffect(() => {
-    document.title = `${doc === "privacy" ? "Privacy policy" : "Terms of service"} · NC Compliance`;
-    window.scrollTo(0, 0);
-    return () => { document.title = "NC Compliance"; };
-  }, [doc]);
+  usePageMeta(`${doc === "privacy" ? "Privacy policy" : "Terms of service"} · NC Compliance`, `/${doc}`);
+  useEffect(() => { window.scrollTo(0, 0); }, [doc]);
 
   return (
     <div className="nc-landing nc-legal">
