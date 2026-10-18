@@ -292,13 +292,12 @@ export default function AdminPage() {
               <tbody>
                 {leads.length === 0 && <tr><td colSpan={6} className="nc-muted-sm">No leads yet. People who take the free compliance check (nccompliance.com.ng/check) and leave their details appear here.</td></tr>}
                 {leads.map((l) => {
-                  const wa = (l.phone || "").replace(/\D/g, "").replace(/^0/, "234");
                   return (
                     <tr key={l.id}>
                       <td style={{ whiteSpace: "nowrap" }}>{fmtTime(l.created_at)}</td>
                       <td>{l.name}</td>
                       <td>{l.company}<div className="nc-muted-sm">{l.org_type === "operator" ? "Operator" : "Contractor"}</div></td>
-                      <td><a href={`mailto:${l.email}`}>{l.email}</a>{l.phone && <div>{wa ? <a href={`https://wa.me/${wa}`} target="_blank" rel="noreferrer">{l.phone}</a> : l.phone}</div>}</td>
+                      <td><a href={`mailto:${l.email}`}>{l.email}</a>{l.phone && <div><a href={`tel:${l.phone.replace(/\s/g, "")}`}>{l.phone}</a></div>}</td>
                       <td><span className={`nc-chip is-${l.score >= 80 ? "ok" : l.score >= 55 ? "warn" : "danger"}`}>{l.score}/100</span></td>
                       <td>{l.signed_up ? <span className="nc-chip is-ok">Yes</span> : <span className="nc-muted-sm">Not yet</span>}</td>
                     </tr>

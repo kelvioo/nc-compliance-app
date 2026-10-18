@@ -19,9 +19,6 @@
     box-shadow: none !important;
   }
 }
-.nc-whatsapp { position:fixed; right:20px; bottom:20px; z-index:50; display:flex; align-items:center; gap:8px; padding:10px 16px 10px 12px; border-radius:999px; background:#25D366; color:#fff; font:600 14px "IBM Plex Sans",sans-serif; text-decoration:none; box-shadow:0 6px 20px rgba(0,0,0,.35); }
-.nc-whatsapp:hover { background:#1EBE5A; }
-@media (max-width: 640px) { .nc-whatsapp span { display:none; } .nc-whatsapp { padding:12px; right:16px; bottom:16px; } }
 .nc-export-bar { display:flex; gap:10px; margin-bottom:14px; flex-wrap:wrap; align-items:center; }
 .nc-export-bar button:disabled { opacity:.6; cursor:wait; }
 .nc-export-error { color:#F2B8B5; font-size:12px; }
@@ -380,3 +377,27 @@ body { font-family: "IBM Plex Sans", sans-serif; color: var(--nc-text); }
   .nc-check-cta { grid-template-columns:1fr; }
   .nc-check-section .nc-table th:nth-child(2), .nc-check-section .nc-table td:nth-child(2) { display:none; }
 }
+
+/* Help centre */
+.nc-help-body { max-width:820px; margin:0 auto; padding:48px 16px 72px; }
+.nc-help-body h1 { font:500 34px Oswald,sans-serif; color:var(--nc-text); margin:0 0 6px; }
+.nc-help-sub { color:var(--nc-muted); margin:0 0 22px; }
+.nc-help-search { display:flex; align-items:center; gap:10px; background:var(--nc-card); border:1px solid var(--nc-line); border-radius:10px; padding:0 14px; color:var(--nc-faint); }
+.nc-help-search input { flex:1; background:transparent; border:none; outline:none; color:var(--nc-text); font:15px "IBM Plex Sans",sans-serif; padding:13px 0; }
+.nc-help-toc { display:flex; flex-wrap:wrap; gap:8px; margin:18px 0 8px; }
+.nc-help-toc a { padding:7px 12px; border-radius:20px; border:1px solid var(--nc-line); color:var(--nc-muted); font-size:13px; text-decoration:none; }
+.nc-help-toc a:hover { border-color:var(--nc-amber); color:var(--nc-text); }
+.nc-help-section { margin-top:34px; scroll-margin-top:80px; }
+.nc-help-section h2 { font:500 20px "IBM Plex Sans",sans-serif; color:var(--nc-text); margin:0 0 10px; }
+.nc-help-section details { background:var(--nc-card); border:1px solid var(--nc-line); border-radius:10px; margin-bottom:8px; }
+.nc-help-section summary { cursor:pointer; padding:14px 16px; color:var(--nc-text); font-weight:500; list-style:none; display:flex; justify-content:space-between; gap:12px; }
+.nc-help-section summary::-webkit-details-marker { display:none; }
+.nc-help-section summary::after { content:"+"; color:var(--nc-amber); font-size:18px; line-height:1; }
+.nc-help-section details[open] summary::after { content:"–"; }
+.nc-help-answer { padding:0 16px 14px; color:#C9CFD6; font-size:14px; line-height:1.7; }
+.nc-help-answer p, .nc-help-answer ul, .nc-help-answer ol { margin:0 0 10px; } .nc-help-answer ul, .nc-help-answer ol { padding-left:20px; }
+.nc-help-answer a, .nc-help-contact a { color:var(--nc-amber); }
+.nc-help-answer b { color:var(--nc-text); font-weight:500; }
+.nc-help-contact { display:flex; gap:12px; align-items:flex-start; margin-top:36px; padding:18px; border-radius:10px; border:1px solid rgba(230,162,60,.35); background:rgba(230,162,60,.06); color:#C9CFD6; line-height:1.6; }
+.nc-help-contact svg { color:var(--nc-amber); flex:none; margin-top:3px; }
+.nc-help .nc-landing-nav { justify-content:space-between; }

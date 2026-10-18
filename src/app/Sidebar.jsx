@@ -3,7 +3,7 @@ import { Link, NavLink, useNavigate } from "react-router-dom";
 import {
   Gauge, FileText, Users, LogOut, TrendingUp, ClipboardList, ShieldCheck, Leaf, RefreshCw,
   Layers, Ship, Package, CalendarClock, CreditCard, AlertTriangle, Handshake, Settings,
-  UserPlus, ChevronDown, ChevronRight, Plus, Building2, Home, Send, FolderLock, LayoutDashboard,
+  UserPlus, ChevronDown, ChevronRight, Plus, Building2, Home, Send, FolderLock, LayoutDashboard, LifeBuoy,
 } from "lucide-react";
 import { supabase } from "../lib/supabase";
 import { roleLabel } from "../lib/roles";
@@ -167,6 +167,9 @@ export function Sidebar({ org, role, memberships, onSelectOrg, userEmail, onRefr
         </button>
         </>
       )}
+      <Link className="nc-sidebar-link" to="/help">
+        <LifeBuoy size={13} /> <span className="nc-sidebar-label">Help & guides</span>
+      </Link>
       <a className="nc-sidebar-link" href="https://ncdmb.gov.ng/operational-guidelines/" target="_blank" rel="noopener noreferrer">
         <FileText size={13} /> <span className="nc-sidebar-label">NCDMB Operational Guidelines</span>
       </a>

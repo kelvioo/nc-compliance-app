@@ -3,7 +3,6 @@ import { Link } from "react-router-dom";
 import { Brand } from "../components/ui";
 import { SUPPORT_EMAIL } from "../lib/config";
 import { TRIAL_DAYS } from "../lib/plans";
-import WhatsAppButton from "../components/WhatsAppButton";
 import { usePageMeta } from "../lib/usePageMeta";
 
 const UPDATED = "15 October 2026";
@@ -39,7 +38,7 @@ function Privacy() {
 
       <h2>2. What we collect</h2>
       <ul>
-        <li><strong>Account details:</strong> your name, work email address, password (stored only as a secure hash) and your role in your company's workspace.</li>
+        <li><strong>Account details:</strong> your name, work email address and your role in your company's workspace.</li>
         <li><strong>Compliance check:</strong> if you use the free compliance check on our website and choose to send us your details, we keep your name, company, email, phone number (if given) and your answers, so we can follow up about your results.</li>
         <li><strong>Company details:</strong> company name, type (operator or contractor), NCEC or registration numbers and the billing email you give us.</li>
         <li><strong>Workspace content:</strong> the data, reports and documents your team enters or uploads. This can include names and job titles of staff, such as expatriate positions or Nigerian understudies.</li>
@@ -50,7 +49,7 @@ function Privacy() {
       <h2>3. Why we use it, and our lawful basis</h2>
       <ul>
         <li><strong>To provide the service</strong> (accounts, workspaces, reports, team invitations and document storage). Basis: performance of our contract with you or your company.</li>
-        <li><strong>To send service emails</strong> (sign-up confirmation, password resets, invitations, NCDMB deadline, trial, renewal and document-expiry reminders). Basis: contract. These emails are part of the service; your company's admins control who is in the workspace.</li>
+        <li><strong>To send service emails</strong> (sign-up confirmation, sign-in and account recovery links, invitations, NCDMB deadline, trial, renewal and document-expiry reminders). Basis: contract. These emails are part of the service; your company's admins control who is in the workspace.</li>
         <li><strong>To take payments and keep financial records.</strong> Basis: contract and legal obligation.</li>
         <li><strong>To keep the service secure,</strong> prevent misuse and fix problems. Basis: our legitimate interests.</li>
         <li><strong>To follow up on a compliance check you asked us about.</strong> Basis: your consent, which you can withdraw at any time by emailing us.</li>
@@ -155,7 +154,7 @@ function Terms() {
       <h2>2. Your responsibilities</h2>
       <ul>
         <li>You are responsible for the accuracy and completeness of everything you enter, and for what you submit to NCDMB or any other authority. Our deadlines, calculations and templates are aids. Check them against current NCDMB guidance and your approved methodology.</li>
-        <li>Keep passwords safe, and only invite people who should see your company's data. You are responsible for activity under your workspace's accounts.</li>
+        <li>Keep your sign-in details safe, and only invite people who should see your company's data. You are responsible for activity under your workspace's accounts.</li>
         <li>Only upload data you have the right to use, and handle staff personal data in line with the Nigeria Data Protection Act 2023.</li>
       </ul>
 
@@ -251,7 +250,6 @@ export default function LegalPage({ doc }) {
         </p>
       </article>
       <LegalFooter />
-      <WhatsAppButton />
     </div>
   );
 }
@@ -262,6 +260,7 @@ export function LegalFooter() {
       <Brand size={14} />
       <span>Independent software. Not affiliated with or endorsed by NCDMB.</span>
       <span className="nc-footer-links">
+        <Link to="/help">Help</Link>
         {SUPPORT_EMAIL && <a href={`mailto:${SUPPORT_EMAIL}`}>Contact</a>}
         <Link to="/privacy">Privacy</Link>
         <Link to="/terms">Terms</Link>

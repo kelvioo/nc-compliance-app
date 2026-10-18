@@ -5,6 +5,8 @@
 //    (§60, due 60 days into the year) submission — same rules as the
 //    in-app compliance calendar.
 //  * Trial ending (3 and 1 day before) and plan expiry (30 and 7 days before).
+//  * Onboarding for new trial companies: welcome (first day), a nudge on day 3
+//    if no data has been logged yet, and the next deadline on day 10.
 //  * Documents in the vault expiring in 30, 7 and 1 day(s).
 //  * A daily summary for the product owner (ADMIN_EMAIL): sign-ups, payments,
 //    compliance-check leads, trials about to end.
@@ -101,6 +103,7 @@ async function sendEmail(to: string[], subject: string, html: string) {
 
 type Org = {
   id: string; name: string; subscription_status: string; trial_ends_at: string; current_period_end: string | null;
+  created_at: string;
 };
 
 function hasAccess(org: Org, now: number) {
@@ -141,8 +144,11 @@ Deno.serve(async (req) => {
     DEADLINE_LEADS.filter((lead) => (d.deadline - today) / DAY === lead).map((lead) => ({ ...d, lead })));
 
   const { data: orgs, error } = await admin.from("organizations")
-    .select("id, name, subscription_status, trial_ends_at, current_period_end");
+    .select("id, name, subscription_status, trial_ends_at, current_period_end, created_at");
   if (error) return new Response(error.message, { status: 500 });
+  const { data: workspaces } = await admin.from("workspaces").select("org_id, entries:data->entries");
+  const entryCount = new Map(((workspaces ?? []) as { org_id: string; entries: unknown }[])
+    .map((w) => [w.org_id, Array.isArray(w.entries) ? w.entries.length : 0]));
 
   const planned: string[] = [];
   const sent: string[] = [];
@@ -178,6 +184,52 @@ Deno.serve(async (req) => {
             { label: "Choose a plan", url: `${APP_URL}/app/billing` },
           ), sent);
         }
+      }
+    }
+
+    // Onboarding for new trial companies.
+    if (org.subscription_status === "trialing" && active) {
+      const created = Date.parse(org.created_at.slice(0, 10));
+      const age = Math.round((today - created) / DAY);
+      const help = `${APP_URL}/help`;
+      let step: { key: string; lead: number; subject: string; title: string; body: string; cta: { label: string; url: string } } | null = null;
+      if (age <= 1) {
+        step = {
+          key: "onboard:welcome", lead: 0, subject: `Welcome to NC Compliance — set up ${org.name} in 3 steps`, title: "Welcome to NC Compliance",
+          body: `<p style="line-height:1.6">Your 30-day free trial for <strong>${escapeHtml(org.name)}</strong> is ready. Three steps get you to your first report:</p>
+            <ol style="line-height:1.9;padding-left:20px">
+              <li><strong>Add your NCDMB / NCEC registration number</strong> in Settings. Every report uses it.</li>
+              <li><strong>Log your spend</strong> in the Spend log: Nigerian and foreign labour, equipment and services.</li>
+              <li><strong>Invite a colleague</strong> as reviewer or approver, so reports get signed off before they go to NCDMB.</li>
+            </ol>
+            <p style="line-height:1.6">Step-by-step guides for every report are in the <a href="${help}" style="color:#b97a1c">help centre</a>.</p>`,
+          cta: { label: "Open my workspace", url: `${APP_URL}/app/home` },
+        };
+      } else if (age >= 3 && age <= 6 && (entryCount.get(org.id) ?? 0) === 0) {
+        step = {
+          key: "onboard:nudge", lead: 3, subject: `Your first NCDMB report in 10 minutes — ${org.name}`, title: "Let's fill your first report",
+          body: `<p style="line-height:1.6">${escapeHtml(org.name)} hasn't logged any data yet. The quickest start:</p>
+            <ol style="line-height:1.9;padding-left:20px">
+              <li>Open <strong>Spend log</strong> and add last month's main payments (payroll, contractors, equipment).</li>
+              <li>Open <strong>NC position</strong>: your Nigerian Content percentage is worked out for you.</li>
+              <li>Open <strong>Job Forecast (§18)</strong>, add next quarter's contracts and click <strong>Download PDF</strong>.</li>
+            </ol>
+            <p style="line-height:1.6">Want to see it filled in first? The <a href="${APP_URL}/demo" style="color:#b97a1c">live demo</a> shows a complete sample company.</p>`,
+          cta: { label: "Log my first entry", url: `${APP_URL}/app/entries` },
+        };
+      } else if (age >= 10 && age <= 13) {
+        const next = deadlines[0];
+        step = {
+          key: "onboard:deadline", lead: 10, subject: `Next NCDMB deadline: ${next.title} — ${org.name}`, title: "Your next NCDMB deadline",
+          body: `<p style="line-height:1.6"><strong>${escapeHtml(next.title)}</strong> are due on <strong>${pretty(next.deadline)}</strong>, ${Math.round((next.deadline - today) / DAY)} days from now:</p>
+            <ul style="line-height:1.8">${next.reports.map((r) => `<li>${escapeHtml(r)}</li>`).join("")}</ul>
+            <p style="line-height:1.6">Prepare them in NC Compliance, send them for review and approval, then download each one as PDF or Excel for submission. We'll remind your team 14, 7, 3 and 1 day before.</p>`,
+          cta: { label: "Open compliance calendar", url: `${APP_URL}/app/calendar` },
+        };
+      }
+      if (step) {
+        planned.push(`${org.name}: ${step.subject}`);
+        if (CAN_SEND) await remind(org, step.key, created, step.lead, step.subject, layout(step.title, step.body, step.cta), sent);
       }
     }
 

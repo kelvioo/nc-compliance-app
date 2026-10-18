@@ -16,6 +16,7 @@ const WorkspaceApp = lazy(() => import("./app/WorkspaceApp"));
 const AdminPage = lazy(() => import("./pages/AdminPage"));
 const DemoApp = lazy(() => import("./app/DemoApp"));
 const ComplianceCheck = lazy(() => import("./pages/ComplianceCheck"));
+const HelpPage = lazy(() => import("./pages/HelpPage"));
 
 function RequireAuth({ children }) {
   const { user, loading } = useAuth();
@@ -42,6 +43,7 @@ export default function App() {
       <Route path="/terms" element={<LegalPage doc="terms" />} />
       <Route path="/demo" element={<Suspense fallback={<FullPageLoader label="Loading the demo…" />}><DemoApp /></Suspense>} />
       <Route path="/demo/:view" element={<Suspense fallback={<FullPageLoader label="Loading the demo…" />}><DemoApp /></Suspense>} />
+      <Route path="/help" element={<Suspense fallback={<FullPageLoader />}><HelpPage /></Suspense>} />
       <Route path="/check" element={<Suspense fallback={<FullPageLoader />}><ComplianceCheck /></Suspense>} />
       <Route path="/invite/:token" element={<InvitePage />} />
       <Route path="/onboarding" element={<RequireAuth><Onboarding /></RequireAuth>} />

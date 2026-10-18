@@ -8,7 +8,6 @@ import { STATUTORY_REPORTS, fmtNaira, getQuarterOptions, nextQuarterly30DayDeadl
 import { Brand } from "../components/ui";
 import { SUPPORT_EMAIL } from "../lib/config";
 import { LegalFooter } from "./LegalPage";
-import WhatsAppButton from "../components/WhatsAppButton";
 
 const FEATURES = [
   { icon: CalendarClock, title: "Never miss a deadline", text: "Every quarterly and annual NCDMB due date worked out for you, with email reminders to your team 14, 7, 3 and 1 day before." },
@@ -185,7 +184,6 @@ export default function Landing() {
       </section>
 
       <LegalFooter />
-      <WhatsAppButton />
     </div>
   );
 }

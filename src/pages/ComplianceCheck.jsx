@@ -7,7 +7,6 @@ import { REPORTS, currentPeriod } from "../lib/reports";
 import { daysUntil } from "../lib/compliance";
 import { usePageMeta } from "../lib/usePageMeta";
 import { LegalFooter } from "./LegalPage";
-import WhatsAppButton from "../components/WhatsAppButton";
 
 const QUESTIONS = [
   { id: "orgType", q: "What kind of company are you?", options: [["operator", "Operator / asset owner"], ["contractor", "Contractor or service company"]] },
@@ -90,7 +89,15 @@ export default function ComplianceCheck() {
     setError("");
     const { error: err } = await supabase.rpc("submit_lead", {
       p_name: lead.name, p_company: lead.company, p_email: lead.email, p_phone: lead.phone,
-      p_org_type: answers.orgType, p_score: result.score, p_answers: answers,
+      p_org_type: answers.orgType, p_score: result.score,
+      p_answers: {
+        answers,
+        result: {
+          band: result.band,
+          owed: result.owed.map(({ r, why, due, label }) => ({ section: r.section, name: r.name, why, due, label })),
+          actions: result.actions,
+        },
+      },
     });
     setSending(false);
     if (err) { setError("Please check your details and try again."); return; }
@@ -179,17 +186,17 @@ export default function ComplianceCheck() {
               </div>
 
               {sent ? (
-                <div className="nc-check-sent"><CheckCircle2 size={20} /> Thanks, {lead.name.split(" ")[0]}. We'll be in touch with your full checklist shortly.</div>
+                <div className="nc-check-sent"><CheckCircle2 size={20} /> Done, {lead.name.split(" ")[0]}. Your full results are on their way to {lead.email}.</div>
               ) : (
                 <form className="nc-check-form" onSubmit={submitLead}>
-                  <strong>Want a personal walkthrough of your results?</strong>
+                  <strong>Email me my results and checklist</strong>
                   <Field label="Your name"><input required style={inputStyle} value={lead.name} onChange={(e) => setLead({ ...lead, name: e.target.value })} /></Field>
                   <Field label="Company"><input required style={inputStyle} value={lead.company} onChange={(e) => setLead({ ...lead, company: e.target.value })} /></Field>
                   <Field label="Work email"><input required type="email" style={inputStyle} value={lead.email} onChange={(e) => setLead({ ...lead, email: e.target.value })} /></Field>
-                  <Field label="Phone / WhatsApp (optional)"><input style={inputStyle} value={lead.phone} onChange={(e) => setLead({ ...lead, phone: e.target.value })} /></Field>
+                  <Field label="Phone (optional)"><input style={inputStyle} value={lead.phone} onChange={(e) => setLead({ ...lead, phone: e.target.value })} /></Field>
                   {error && <p className="nc-form-error">{error}</p>}
                   <button className="nc-btn nc-btn-primary" disabled={sending}>{sending ? <Loader2 size={15} className="nc-spin" /> : null} Send me my checklist</button>
-                  <small className="nc-muted-sm">We'll only use this to follow up on your check. See our <Link to="/privacy">privacy policy</Link>.</small>
+                  <small className="nc-muted-sm">We'll email your results and a couple of short follow-ups. Unsubscribe any time. See our <Link to="/privacy">privacy policy</Link>.</small>
                 </form>
               )}
             </section>
@@ -200,7 +207,6 @@ export default function ComplianceCheck() {
         )}
       </main>
       <LegalFooter />
-      <WhatsAppButton message="Hello NC Compliance, I just did the free compliance check and would like help with my results." />
     </div>
   );
 }

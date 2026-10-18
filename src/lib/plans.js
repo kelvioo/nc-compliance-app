@@ -14,7 +14,7 @@ export const PLANS = [
   {
     id: "enterprise", name: "Enterprise", price: 1000000, seats: null,
     tagline: "For multi-asset operators and compliance consultancies.",
-    features: ["Everything in Operations", "Unlimited team members", "Priority onboarding & data import", "Dedicated account manager"],
+    features: ["Everything in Operations", "Unlimited team members", "Priority onboarding & data import", "Priority email support & guided onboarding"],
   },
 ];
 
