@@ -63,7 +63,7 @@ npm run lint && npm run build
 ## Going live checklist
 
 1. **Vercel:** import this repo and set `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`
-   (and optionally `VITE_SUPPORT_EMAIL`, and `VITE_WHATSAPP_NUMBER` in international digits, e.g. `2348012345678`, to show the WhatsApp chat button). `vercel.json` already routes all paths to the SPA.
+   (and optionally `VITE_SUPPORT_EMAIL`, and `VITE_WHATSAPP_NUMBER` in international digits, e.g. `2348012345678`, to change the WhatsApp chat number). `vercel.json` already routes all paths to the SPA.
 2. **Supabase → Authentication → URL configuration:** set *Site URL* to the
    production domain and add `https://<domain>/**` to *Redirect URLs*.
 3. **Supabase → Authentication → SMTP:** add a custom SMTP sender. The built-in one
