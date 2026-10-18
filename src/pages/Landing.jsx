@@ -47,6 +47,8 @@ export default function Landing() {
           <a href="#features">Features</a>
           <a href="#reports">Reports</a>
           <a href="#pricing">Pricing</a>
+          <Link to="/demo">Live demo</Link>
+          <Link to="/check">Free check</Link>
           <a href="#faq">FAQ</a>
         </nav>
         <div className="nc-landing-nav-cta">
@@ -71,9 +73,9 @@ export default function Landing() {
           </p>
           <div className="nc-hero-cta">
             <Link to="/signup" className="nc-btn nc-btn-primary nc-btn-lg">Start your {TRIAL_DAYS}-day free trial <ArrowRight size={18} /></Link>
-            <a href="#pricing" className="nc-btn nc-btn-ghost nc-btn-lg">See pricing</a>
+            <Link to="/demo" className="nc-btn nc-btn-ghost nc-btn-lg">See a live demo</Link>
           </div>
-          <p className="nc-hero-note">No card required · Set up in two minutes</p>
+          <p className="nc-hero-note">No card required · Set up in two minutes · <Link to="/demo">Try the demo without signing up</Link></p>
         </div>
 
         <div className="nc-hero-preview" aria-hidden="true">
@@ -98,6 +100,14 @@ export default function Landing() {
             <div className="nc-preview-foot">For {nextQuarter?.quarterLabel} · due {nextQuarter?.deadlineLabel}</div>
           </div>
         </div>
+      </section>
+
+      <section className="nc-check-banner">
+        <div>
+          <strong>Not sure which NCDMB reports you owe, or when?</strong>
+          <span>Take the free 2-minute NC Compliance Check. Get your compliance score, the reports you're likely to owe and your next deadlines. No sign-up.</span>
+        </div>
+        <Link to="/check" className="nc-btn nc-btn-primary">Check my compliance <ArrowRight size={16} /></Link>
       </section>
 
       <section id="features" className="nc-section">

@@ -18,6 +18,8 @@ data and produce their statutory NCDMB reports. Companies sign up, get a
 | Report guidance + approval bar on each report | `src/lib/reports.js`, `src/app/ReportHeader.jsx` |
 | Team / Billing / Settings | `src/views/TeamView.jsx`, `BillingView.jsx`, `SettingsView.jsx` |
 | Owner's admin console (`/admin`) | `src/pages/AdminPage.jsx` |
+| Public live demo (`/demo`), no sign-up, sample data in the browser | `src/app/DemoApp.jsx`, `src/lib/sampleData.js` |
+| Free NC Compliance Check (`/check`) and leads | `src/pages/ComplianceCheck.jsx`, `leads` table + `submit_lead()` |
 | Database schema, security rules, functions | `supabase/migrations/` |
 | Paystack checkout + webhook | `supabase/functions/billing` |
 | Invite emails | `supabase/functions/send-email` |

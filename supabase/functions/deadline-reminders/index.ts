@@ -7,7 +7,7 @@
 //  * Trial ending (3 and 1 day before) and plan expiry (30 and 7 days before).
 //  * Documents in the vault expiring in 30, 7 and 1 day(s).
 //  * A daily summary for the product owner (ADMIN_EMAIL): sign-ups, payments,
-//    trials about to end.
+//    compliance-check leads, trials about to end.
 //
 // Each reminder is claimed in reminder_log before sending, so it goes out at
 // most once per company, report, deadline and lead time even if the job runs
@@ -225,22 +225,24 @@ Deno.serve(async (req) => {
   // Daily summary for the product owner.
   if (ADMIN_EMAIL && CAN_SEND) {
     const since = new Date(now - DAY).toISOString();
-    const [{ data: newOrgs }, { data: paid }, { data: users }] = await Promise.all([
+    const [{ data: newOrgs }, { data: paid }, { data: users }, { data: leads }] = await Promise.all([
       admin.from("organizations").select("name, org_type, created_at").gte("created_at", since),
       admin.from("payments").select("amount_kobo, plan, organizations(name)").eq("status", "success").gte("paid_at", since),
       admin.auth.admin.listUsers({ perPage: 1000 }),
+      admin.from("leads").select("name, company, email, phone, score").gte("created_at", since).order("created_at"),
     ]);
     const newUsers = (users?.users ?? []).filter((u) => u.created_at >= since).length;
     const endingSoon = ((orgs ?? []) as Org[]).filter((o) => o.subscription_status === "trialing"
       && Date.parse(o.trial_ends_at) > now && Date.parse(o.trial_ends_at) - now < 3 * DAY);
     const revenue = (paid ?? []).reduce((sum, p: { amount_kobo: number }) => sum + Number(p.amount_kobo || 0), 0) / 100;
-    if ((newOrgs ?? []).length || (paid ?? []).length || newUsers || endingSoon.length) {
+    if ((newOrgs ?? []).length || (paid ?? []).length || newUsers || endingSoon.length || (leads ?? []).length) {
       const list = (items: string[]) => items.length ? `<ul style="line-height:1.8">${items.map((i) => `<li>${escapeHtml(i)}</li>`).join("")}</ul>` : "<p>None.</p>";
       const html = layout(
         "Your daily NC Compliance summary",
-        `<p><strong>${(newOrgs ?? []).length}</strong> new companies · <strong>${newUsers}</strong> new users · <strong>₦${revenue.toLocaleString("en-NG")}</strong> revenue (last 24 hours)</p>
+        `<p><strong>${(newOrgs ?? []).length}</strong> new companies · <strong>${newUsers}</strong> new users · <strong>₦${revenue.toLocaleString("en-NG")}</strong> revenue · <strong>${(leads ?? []).length}</strong> new leads (last 24 hours)</p>
          <h3 style="font-size:15px">New companies</h3>${list((newOrgs ?? []).map((o: { name: string; org_type: string }) => `${o.name} (${o.org_type})`))}
          <h3 style="font-size:15px">Payments</h3>${list((paid ?? []).map((p: any) => `${p.organizations?.name ?? "?"} — ₦${(Number(p.amount_kobo) / 100).toLocaleString("en-NG")} (${p.plan})`))}
+         <h3 style="font-size:15px">New leads from the compliance check</h3>${list((leads ?? []).map((l: { name: string; company: string; email: string; phone: string | null; score: number }) => `${l.name}, ${l.company} — ${l.email}${l.phone ? `, ${l.phone}` : ""} (score ${l.score}/100)`))}
          <h3 style="font-size:15px">Trials ending within 3 days</h3>${list(endingSoon.map((o) => `${o.name} — ends ${pretty(Date.parse(o.trial_ends_at.slice(0, 10)))}`))}`,
         { label: "Open admin console", url: `${APP_URL}/admin` },
       );

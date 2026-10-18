@@ -8,6 +8,7 @@ import {
 import { supabase } from "../lib/supabase";
 import { roleLabel } from "../lib/roles";
 import { currentPeriod, reportById } from "../lib/reports";
+import { useWorkspaceBase } from "./base";
 
 const MAIN_ITEMS = [
   { id: "home", label: "Home", icon: Home },
@@ -56,9 +57,10 @@ const REPORTS_OPEN_KEY = "nc_reports_open";
 
 function NavItem({ item, dot }) {
   const Icon = item.icon;
+  const base = useWorkspaceBase();
   return (
     <NavLink
-      to={`/app/${item.id}`}
+      to={`${base}/${item.id}`}
       className={({ isActive }) => `nc-sidebar-nav-item ${isActive ? "is-active" : ""}`}
       title={item.label}
     >
@@ -69,7 +71,7 @@ function NavItem({ item, dot }) {
   );
 }
 
-export function Sidebar({ org, role, memberships, onSelectOrg, userEmail, onRefresh, refreshing, labsEnabled, isPlatformAdmin, submissions }) {
+export function Sidebar({ org, role, memberships, onSelectOrg, userEmail, onRefresh, refreshing, labsEnabled, isPlatformAdmin, submissions, demo = false }) {
   const [switcherOpen, setSwitcherOpen] = useState(false);
   const [reportsOpen, setReportsOpen] = useState(() => {
     try { return localStorage.getItem(REPORTS_OPEN_KEY) !== "0"; } catch { return true; }
@@ -100,13 +102,13 @@ export function Sidebar({ org, role, memberships, onSelectOrg, userEmail, onRefr
   return (
     <nav className="nc-sidebar" aria-label="Workspace">
       <div className="nc-sidebar-header">
-        <button className="nc-org-switcher" onClick={() => setSwitcherOpen((o) => !o)} aria-expanded={switcherOpen}>
+        <button className="nc-org-switcher" onClick={() => !demo && setSwitcherOpen((o) => !o)} aria-expanded={switcherOpen}>
           <Building2 size={18} color="#E6A23C" />
           <span className="nc-sidebar-header-text">
             <strong>{org.name}</strong>
             <small>{roleLabel(role)}</small>
           </span>
-          <ChevronDown size={14} />
+          {!demo && <ChevronDown size={14} />}
         </button>
         {switcherOpen && (
           <div className="nc-org-menu">
@@ -139,22 +141,32 @@ export function Sidebar({ org, role, memberships, onSelectOrg, userEmail, onRefr
         </>
       )}
 
-      <div className="nc-sidebar-section nc-sidebar-label">Account</div>
-      {ACCOUNT_ITEMS.map((it) => <NavItem key={it.id} item={it} />)}
-      {isPlatformAdmin && (
-        <Link to="/admin" className="nc-sidebar-nav-item nc-admin-link"><LayoutDashboard size={16} /> <span className="nc-sidebar-label">Admin console</span></Link>
+      {demo ? (
+        <>
+          <div className="nc-sidebar-spacer" />
+          <Link to="/signup" className="nc-sidebar-cta">Start your free trial</Link>
+          <Link to="/" className="nc-sidebar-logout"><LogOut size={15} /> <span className="nc-sidebar-label">Exit demo</span></Link>
+        </>
+      ) : (
+        <>
+        <div className="nc-sidebar-section nc-sidebar-label">Account</div>
+        {ACCOUNT_ITEMS.map((it) => <NavItem key={it.id} item={it} />)}
+        {isPlatformAdmin && (
+          <Link to="/admin" className="nc-sidebar-nav-item nc-admin-link"><LayoutDashboard size={16} /> <span className="nc-sidebar-label">Admin console</span></Link>
+        )}
+
+        <div className="nc-sidebar-spacer" />
+
+        <button onClick={onRefresh} disabled={refreshing} className="nc-sidebar-logout">
+          <RefreshCw size={15} className={refreshing ? "nc-spin" : undefined} />
+          <span className="nc-sidebar-label">{refreshing ? "Refreshing…" : "Refresh data"}</span>
+        </button>
+        <div className="nc-sidebar-user nc-sidebar-label" title={userEmail}>{userEmail}</div>
+        <button onClick={signOut} className="nc-sidebar-logout">
+          <LogOut size={15} /> <span className="nc-sidebar-label">Sign out</span>
+        </button>
+        </>
       )}
-
-      <div className="nc-sidebar-spacer" />
-
-      <button onClick={onRefresh} disabled={refreshing} className="nc-sidebar-logout">
-        <RefreshCw size={15} className={refreshing ? "nc-spin" : undefined} />
-        <span className="nc-sidebar-label">{refreshing ? "Refreshing…" : "Refresh data"}</span>
-      </button>
-      <div className="nc-sidebar-user nc-sidebar-label" title={userEmail}>{userEmail}</div>
-      <button onClick={signOut} className="nc-sidebar-logout">
-        <LogOut size={15} /> <span className="nc-sidebar-label">Sign out</span>
-      </button>
       <a className="nc-sidebar-link" href="https://ncdmb.gov.ng/operational-guidelines/" target="_blank" rel="noopener noreferrer">
         <FileText size={13} /> <span className="nc-sidebar-label">NCDMB Operational Guidelines</span>
       </a>

@@ -1,12 +1,14 @@
 import { Link } from "react-router-dom";
 import { REPORTS, currentPeriod, statusLabel } from "../lib/reports";
 import { daysUntil } from "../lib/compliance";
+import { useWorkspaceBase } from "../app/base";
 import { DeadlineBadge } from "../components/ui";
 
 const fmt = (d) => (d ? new Date(d).toLocaleDateString("en-NG", { day: "numeric", month: "short", year: "numeric" }) : "—");
 
 // Every report for its current period, plus everything submitted before.
 export function SubmissionsView({ submissions }) {
+  const base = useWorkspaceBase();
   const current = REPORTS.filter((r) => r.id !== "ncdf").map((r) => {
     const p = currentPeriod(r);
     return { r, ...p, row: submissions.byKey[`${r.id}:${p.period}`] };
@@ -41,11 +43,11 @@ export function SubmissionsView({ submissions }) {
           <tbody>
             {current.map(({ r, label, due, row }) => (
               <tr key={r.id}>
-                <td><Link className="nc-row-link" to={`/app/${r.id}`}>§{r.section} {r.name}</Link></td>
+                <td><Link className="nc-row-link" to={`${base}/${r.id}`}>§{r.section} {r.name}</Link></td>
                 <td>{label}</td>
                 <td style={{ whiteSpace: "nowrap" }}>{due ? <>{fmt(due)} {row?.status !== "submitted" && <DeadlineBadge days={daysUntil(new Date(due), new Date())} />}</> : <span className="nc-muted-sm">Confirm with NCDMB</span>}</td>
                 <td><span className={`nc-status nc-status-${row?.status || "draft"}`}>{statusLabel(row?.status)}</span></td>
-                <td className="nc-table-actions"><Link className="nc-btn-sm is-ghost" to={`/app/${r.id}`}>Open</Link></td>
+                <td className="nc-table-actions"><Link className="nc-btn-sm is-ghost" to={`${base}/${r.id}`}>Open</Link></td>
               </tr>
             ))}
           </tbody>

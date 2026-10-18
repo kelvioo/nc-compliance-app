@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { ArrowLeft, Building2, Users, CreditCard, Activity, LayoutDashboard, Search, RefreshCw, LogOut } from "lucide-react";
+import { ArrowLeft, Building2, Users, CreditCard, Activity, LayoutDashboard, Search, RefreshCw, LogOut, Target } from "lucide-react";
 import { supabase } from "../lib/supabase";
 import { useAuth } from "../auth/AuthProvider";
 import { friendlyError } from "../lib/errors";
@@ -35,6 +35,7 @@ const TABS = [
   { id: "companies", label: "Companies", icon: Building2 },
   { id: "users", label: "Users", icon: Users },
   { id: "payments", label: "Payments", icon: CreditCard },
+  { id: "leads", label: "Leads", icon: Target },
   { id: "activity", label: "Activity", icon: Activity },
 ];
 
@@ -104,6 +105,7 @@ export default function AdminPage() {
   const [users, setUsers] = useState([]);
   const [payments, setPayments] = useState([]);
   const [activity, setActivity] = useState([]);
+  const [leads, setLeads] = useState([]);
   const [query, setQuery] = useState("");
   const [managing, setManaging] = useState(null);
   const [toast, setToast] = useState(null);
@@ -113,13 +115,14 @@ export default function AdminPage() {
 
   const load = useCallback(async () => {
     setLoading(true);
-    const [o, c, u, p, a] = await Promise.all([
+    const [o, c, u, p, a, l] = await Promise.all([
       supabase.rpc("admin_overview"), supabase.rpc("admin_companies"), supabase.rpc("admin_users"),
-      supabase.rpc("admin_payments"), supabase.rpc("admin_activity"),
+      supabase.rpc("admin_payments"), supabase.rpc("admin_activity"), supabase.rpc("admin_leads"),
     ]);
-    const err = [o, c, u, p, a].find((r) => r.error)?.error;
+    const err = [o, c, u, p, a, l].find((r) => r.error)?.error;
     if (err) notify(friendlyError(err));
     setOverview(o.data); setCompanies(c.data || []); setUsers(u.data || []); setPayments(p.data || []); setActivity(a.data || []);
+    setLeads(l.data || []);
     setLoading(false);
   }, [notify]);
 
@@ -277,6 +280,30 @@ export default function AdminPage() {
                   <tr key={p.reference}><td>{fmtTime(p.paid_at || p.created_at)}</td><td>{p.company}</td><td>{planName(p.plan)}</td><td>{naira(p.amount_kobo)}</td>
                     <td><span className={`nc-chip is-${p.status === "success" ? "ok" : "info"}`}>{p.status === "initialized" ? "Checkout started" : p.status}</span></td><td><code>{p.reference}</code></td></tr>
                 ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+
+        {tab === "leads" && (
+          <div className="nc-table-card">
+            <table className="nc-table">
+              <thead><tr><th>Date</th><th>Name</th><th>Company</th><th>Contact</th><th>Score</th><th>Signed up?</th></tr></thead>
+              <tbody>
+                {leads.length === 0 && <tr><td colSpan={6} className="nc-muted-sm">No leads yet. People who take the free compliance check (nccompliance.com.ng/check) and leave their details appear here.</td></tr>}
+                {leads.map((l) => {
+                  const wa = (l.phone || "").replace(/\D/g, "").replace(/^0/, "234");
+                  return (
+                    <tr key={l.id}>
+                      <td style={{ whiteSpace: "nowrap" }}>{fmtTime(l.created_at)}</td>
+                      <td>{l.name}</td>
+                      <td>{l.company}<div className="nc-muted-sm">{l.org_type === "operator" ? "Operator" : "Contractor"}</div></td>
+                      <td><a href={`mailto:${l.email}`}>{l.email}</a>{l.phone && <div>{wa ? <a href={`https://wa.me/${wa}`} target="_blank" rel="noreferrer">{l.phone}</a> : l.phone}</div>}</td>
+                      <td><span className={`nc-chip is-${l.score >= 80 ? "ok" : l.score >= 55 ? "warn" : "danger"}`}>{l.score}/100</span></td>
+                      <td>{l.signed_up ? <span className="nc-chip is-ok">Yes</span> : <span className="nc-muted-sm">Not yet</span>}</td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>

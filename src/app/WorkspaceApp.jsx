@@ -9,16 +9,6 @@ import { FullPageLoader } from "../components/ui";
 import { useWorkspace } from "./useWorkspace";
 import { Sidebar } from "./Sidebar";
 import { AccessBanner } from "./AccessBanner";
-import { Dashboard } from "../views/Dashboard";
-import { EntriesView } from "../views/EntriesView";
-import { QuotaView } from "../views/QuotaView";
-import { NCPlanView } from "../views/NCPlanView";
-import { QuarterlyReportsView } from "../views/QuarterlyReportsView";
-import { NCDFView } from "../views/NCDFView";
-import { AnnualReportView } from "../views/AnnualReportView";
-import { OtherStatutoryView } from "../views/OtherStatutoryView";
-import { CarbonView } from "../views/CarbonView";
-import { ReportView } from "../views/ReportView";
 import { TeamView } from "../views/TeamView";
 import { BillingView } from "../views/BillingView";
 import { SettingsView } from "../views/SettingsView";
@@ -27,41 +17,10 @@ import { SubmissionsView } from "../views/SubmissionsView";
 import { DocumentsView } from "../views/DocumentsView";
 import { useSubmissions } from "./useSubmissions";
 import { ReportHeader } from "./ReportHeader";
+import { REPORT_VIEWS, LABS_ENABLED } from "./reportViews";
 import { reportById } from "../lib/reports";
-import { OperationsAssuranceView } from "../views/labs/OperationsAssuranceView";
-import { MarketplaceView } from "../views/labs/MarketplaceView";
 
 const LAST_ORG_KEY = "nc_last_org";
-
-// Experimental modules stay out of the product until they are finished.
-export const LABS_ENABLED = import.meta.env.VITE_ENABLE_LABS === "true";
-
-const REPORT_VIEWS = {
-  dashboard: (p) => <Dashboard {...p} />,
-  entries: (p) => <EntriesView {...p} />,
-  quota: (p) => <QuotaView {...p} />,
-  carbon: (p) => <CarbonView {...p} />,
-  report: (p) => <ReportView {...p} />,
-  ncplan: (p) => <NCPlanView {...p} />,
-  calendar: (p) => <QuarterlyReportsView {...p} />,
-  forecast: (p) => <QuarterlyReportsView {...p} lockTab="forecast" />,
-  procServices: (p) => <QuarterlyReportsView {...p} lockTab="procServices" />,
-  procMaterials: (p) => <QuarterlyReportsView {...p} lockTab="procMaterials" />,
-  marine: (p) => <QuarterlyReportsView {...p} lockTab="marine" />,
-  ncdf: (p) => <NCDFView {...p} />,
-  annual: (p) => <AnnualReportView {...p} />,
-  training: (p) => <OtherStatutoryView {...p} lockTab="training" />,
-  rnd: (p) => <OtherStatutoryView {...p} lockTab="rnd" />,
-  tech: (p) => <OtherStatutoryView {...p} lockTab="tech" />,
-  insurance: (p) => <OtherStatutoryView {...p} lockTab="insurance" />,
-  legal: (p) => <OtherStatutoryView {...p} lockTab="legal" />,
-  financial: (p) => <OtherStatutoryView {...p} lockTab="financial" />,
-  succession: (p) => <OtherStatutoryView {...p} lockTab="succession" />,
-  ...(LABS_ENABLED ? {
-    assurance: (p) => <OperationsAssuranceView {...p} />,
-    marketplace: (p) => <MarketplaceView {...p} />,
-  } : {}),
-};
 
 export default function WorkspaceApp() {
   const { view } = useParams();
