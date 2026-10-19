@@ -178,6 +178,7 @@ function Terms() {
         <li>A plan runs for 12 months from payment. If you renew before it ends, the new year starts when the current one finishes, so you lose no paid time.</li>
         <li>Plans <strong>do not renew automatically</strong>. We email you before your plan ends. If you don't renew, the workspace becomes read-only and your data is kept.</li>
         <li>If you are unhappy within 7 days of your first payment, contact us for a full refund. Otherwise fees are non-refundable, except where Nigerian law requires a refund.</li>
+        <li>Founding customer offer: the first 20 companies to pay get 30% off the list price. That price applies to every payment made within two years of the company's first payment, on any plan. After that, the list price applies.</li>
         <li>We may change prices for future periods. Any change applies from your next renewal, never to a period you have already paid for.</li>
       </ul>
 

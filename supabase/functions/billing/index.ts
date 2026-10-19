@@ -78,7 +78,11 @@ async function activate(tx: any) {
   if (tx.status !== "success" || !orgId || !planId) return { ok: false, error: "Payment was not successful." };
 
   const { data: plan } = await admin.from("plans").select("id, price_kobo").eq("id", planId).single();
-  if (!plan || tx.currency !== "NGN" || Number(tx.amount) < Number(plan.price_kobo)) {
+  // Checkout records the amount it asked for (the founding price if the
+  // company qualified); a payment started elsewhere must cover the list price.
+  const { data: pending } = await admin.from("payments").select("amount_kobo").eq("reference", reference).maybeSingle();
+  const expected = Number(pending?.amount_kobo ?? plan?.price_kobo);
+  if (!plan || tx.currency !== "NGN" || !(Number(tx.amount) >= expected)) {
     console.error("payment does not match plan", reference, tx.amount, tx.currency, planId);
     return { ok: false, error: "Payment amount doesn't match the plan. Please contact support." };
   }
@@ -94,7 +98,7 @@ async function activate(tx: any) {
   if (!claimed || claimed.length === 0) return { ok: true, plan: planId, already: true };
 
   const { data: org } = await admin.from("organizations")
-    .select("name, subscription_status, current_period_end").eq("id", orgId).single();
+    .select("name, subscription_status, current_period_end, founding_until").eq("id", orgId).single();
   const now = new Date();
   const currentEnd = org?.current_period_end ? new Date(org.current_period_end) : null;
   // Paying early stacks the new year on top of the time already paid for.
@@ -107,6 +111,9 @@ async function activate(tx: any) {
     subscription_status: "active",
     current_period_end: end.toISOString(),
     paystack_customer_code: tx.customer?.customer_code ?? null,
+    // A first payment below the list price locks the founding price for two years.
+    ...(!org?.founding_until && Number(tx.amount) < Number(plan.price_kobo)
+      ? { founding_until: new Date(now.getTime() + 2 * 365 * 86400000).toISOString() } : {}),
   }).eq("id", orgId);
 
   await admin.from("audit_log").insert({
@@ -131,21 +138,24 @@ async function checkout(user: User, body: any) {
     return json({ error: "Invalid callback URL." }, 400);
   }
 
-  const { data: plan } = await admin.from("plans").select("id, price_kobo, purchasable").eq("id", planId).single();
+  const { data: plan } = await admin.from("plans").select("id, price_kobo, founding_price_kobo, purchasable").eq("id", planId).single();
   if (!plan?.purchasable) return json({ error: "That plan can't be purchased." }, 400);
-  const { data: org } = await admin.from("organizations").select("id, name, billing_email").eq("id", orgId).single();
+  const { data: org } = await admin.from("organizations").select("id, name, billing_email, founding_until").eq("id", orgId).single();
   if (!org) return json({ error: "Company not found." }, 404);
+  const locked = org.founding_until && new Date(org.founding_until) > new Date();
+  const founding = plan.founding_price_kobo != null && (locked || (!org.founding_until && (await admin.rpc("founding_offer_open")).data === true));
+  const amount = founding ? plan.founding_price_kobo : plan.price_kobo;
 
   const reference = `nc_${orgId.slice(0, 8)}_${Date.now().toString(36)}`;
   await admin.from("payments").insert({
-    reference, org_id: orgId, plan: planId, amount_kobo: plan.price_kobo, status: "initialized",
+    reference, org_id: orgId, plan: planId, amount_kobo: amount, status: "initialized",
   });
 
   const tx = await paystack("/transaction/initialize", {
     method: "POST",
     body: JSON.stringify({
       email: org.billing_email || user.email,
-      amount: String(plan.price_kobo),
+      amount: String(amount),
       currency: "NGN",
       reference,
       callback_url: callback.toString(),

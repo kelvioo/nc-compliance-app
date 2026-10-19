@@ -1,7 +1,9 @@
 import { useEffect, useState } from "react";
 import { CreditCard, CheckCircle2, LockKeyhole } from "lucide-react";
 import { supabase } from "../lib/supabase";
-import { PLANS, orgAccess, planName } from "../lib/plans";
+import { FOUNDING, PLANS, orgAccess, planName } from "../lib/plans";
+import { orgGetsFounding, useFoundingOfferOpen } from "../lib/founding";
+import { PriceTag } from "../components/PriceTag";
 import { canManage } from "../lib/roles";
 import { fmtNaira } from "../lib/compliance";
 import { friendlyError } from "../lib/errors";
@@ -15,6 +17,7 @@ export function BillingView({ org, role, notify }) {
   const [payments, setPayments] = useState([]);
   const manager = canManage(role);
   const access = orgAccess(org);
+  const founding = orgGetsFounding(org, useFoundingOfferOpen());
 
   useEffect(() => {
     if (!manager) return;
@@ -60,6 +63,14 @@ export function BillingView({ org, role, notify }) {
 
       {!manager && <p className="nc-form-help">Only the company owner or an admin can change the plan.</p>}
 
+      {founding && (
+        <p className="nc-founding-banner">
+          {org.founding_until
+            ? <><strong>Founding customer:</strong> your {FOUNDING.percentOff}% founding price is locked until {fmtDate(org.founding_until)}.</>
+            : <><strong>Founding customer offer:</strong> pay now and lock in {FOUNDING.percentOff}% off for {FOUNDING.years} years. Only for the first {FOUNDING.companies} companies.</>}
+        </p>
+      )}
+
       <div className="nc-plan-grid">
         {PLANS.map((plan) => {
           const current = org.plan === plan.id && org.subscription_status === "active" && access.hasAccess;
@@ -67,7 +78,7 @@ export function BillingView({ org, role, notify }) {
             <article className={`nc-plan-card ${plan.recommended ? "is-recommended" : ""}`} key={plan.id}>
               {plan.recommended && <span className="nc-best-value">MOST POPULAR</span>}
               <h2>{plan.name}</h2>
-              <div className="nc-price">{fmtNaira(plan.price)}<small> / year</small></div>
+              <PriceTag plan={plan} founding={founding} className="nc-price" />
               <p>{plan.tagline}</p>
               <ul className="nc-feature-list">
                 {plan.features.map((f) => <li key={f}><CheckCircle2 size={14} /> {f}</li>)}

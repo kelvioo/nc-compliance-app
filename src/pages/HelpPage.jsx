@@ -100,6 +100,7 @@ const GUIDES = [
       { q: "How do I pay?", a: <>
         <p>Open <b>Billing</b>, choose a plan and pay by card or bank transfer through Paystack. Plans are paid yearly in naira and <b>do not renew automatically</b>: we email you 30 and 7 days before your year ends.</p>
         <p>Paying before your year ends adds the new year on top, so you never lose paid time.</p>
+        <p><b>Founding customers:</b> the first 20 companies to pay get 30% off any plan, and keep that price for two years from their first payment. Billing shows whether the offer is still open.</p>
       </> },
       { q: "Can we pay by invoice?", a: <p>Yes. Email {SUPPORT_EMAIL ? <a href={`mailto:${SUPPORT_EMAIL}`}>{SUPPORT_EMAIL}</a> : "us"} with your company name and plan, and we'll send an invoice. Your plan is activated when payment arrives.</p> },
       { q: "Refunds", a: <p>If you're unhappy within 7 days of your first payment, email us for a full refund. See the <A to="/terms">terms of service</A>.</p> },

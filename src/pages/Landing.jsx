@@ -3,8 +3,10 @@ import {
   ArrowRight, CalendarClock, CheckCircle2, ClipboardList, FileText, ShieldCheck, BellRing, History, Send, FolderLock,
 } from "lucide-react";
 import { useAuth } from "../auth/AuthProvider";
-import { PLANS, TRIAL_DAYS } from "../lib/plans";
-import { STATUTORY_REPORTS, fmtNaira, getQuarterOptions, nextQuarterly30DayDeadline, daysUntil } from "../lib/compliance";
+import { FOUNDING, PLANS, TRIAL_DAYS } from "../lib/plans";
+import { useFoundingOfferOpen } from "../lib/founding";
+import { PriceTag } from "../components/PriceTag";
+import { STATUTORY_REPORTS, getQuarterOptions, nextQuarterly30DayDeadline, daysUntil } from "../lib/compliance";
 import { Brand } from "../components/ui";
 import { SUPPORT_EMAIL } from "../lib/config";
 import { LegalFooter } from "./LegalPage";
@@ -34,6 +36,7 @@ const FAQ = [
 
 export default function Landing() {
   const { user } = useAuth();
+  const foundingOpen = useFoundingOfferOpen();
   const nextDeadline = nextQuarterly30DayDeadline(new Date());
   const days = daysUntil(new Date(nextDeadline), new Date());
   const nextQuarter = getQuarterOptions().find((q) => q.deadline >= new Date(new Date().setHours(0, 0, 0, 0)));
@@ -151,12 +154,15 @@ export default function Landing() {
       <section id="pricing" className="nc-section">
         <h2>Simple annual pricing</h2>
         <p className="nc-section-sub">Every plan starts with a {TRIAL_DAYS}-day free trial of all features. Prices in naira, billed yearly.</p>
+        {foundingOpen && (
+          <p className="nc-founding-banner"><strong>Founding customer offer:</strong> the first {FOUNDING.companies} companies get {FOUNDING.percentOff}% off any plan, locked for {FOUNDING.years} years.</p>
+        )}
         <div className="nc-pricing-grid">
           {PLANS.map((p) => (
             <article key={p.id} className={`nc-price-card ${p.recommended ? "is-recommended" : ""}`}>
               {p.recommended && <span className="nc-price-badge">Most popular</span>}
               <h3>{p.name}</h3>
-              <div className="nc-price-amount">{fmtNaira(p.price)}<small>/year</small></div>
+              <PriceTag plan={p} founding={foundingOpen} />
               <p>{p.tagline}</p>
               <ul>
                 {p.features.map((f) => <li key={f}><CheckCircle2 size={15} /> {f}</li>)}
