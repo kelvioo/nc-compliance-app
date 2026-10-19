@@ -36,6 +36,7 @@ export function sampleData() {
     target: 70,
     exchangeRate: 1600,
     registeredAddress: "14 Trans-Amadi Industrial Layout, Port Harcourt, Rivers State",
+    packSignatory: { name: "Adewale Abubakar", designation: "Nigerian Content Manager", address: "14 Trans-Amadi Industrial Layout, Port Harcourt, Rivers State" },
     entries: [
       entry(3, "ngLabor", "Payroll — Onne base crew", 48_500_000, "Bonga North tie-back"),
       entry(6, "localServices", "Oando Logistics", 22_750_000, "Bonga North tie-back", "Marine logistics support"),

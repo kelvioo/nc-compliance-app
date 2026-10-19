@@ -15,6 +15,7 @@ import { SettingsView } from "../views/SettingsView";
 import { HomeView } from "../views/HomeView";
 import { SubmissionsView } from "../views/SubmissionsView";
 import { DocumentsView } from "../views/DocumentsView";
+import { PackView } from "../views/PackView";
 import { useSubmissions } from "./useSubmissions";
 import { ReportHeader } from "./ReportHeader";
 import { REPORT_VIEWS, LABS_ENABLED } from "./reportViews";
@@ -92,7 +93,8 @@ export default function WorkspaceApp() {
 
   const isReportView = Boolean(REPORT_VIEWS[view]);
   const isHome = view === "home";
-  if (!isHome && !isReportView && !accountViews[view]) return <Navigate to="/app/home" replace />;
+  const isPack = view === "pack";
+  if (!isHome && !isPack && !isReportView && !accountViews[view]) return <Navigate to="/app/home" replace />;
 
   // Viewers and expired workspaces can browse everything but not save.
   const guardedSetData = (next) => {
@@ -110,7 +112,7 @@ export default function WorkspaceApp() {
   };
 
   let body;
-  if (!isReportView && !isHome) {
+  if (!isReportView && !isHome && !isPack) {
     body = accountViews[view]();
   } else if (ws.loadError) {
     body = <div className="nc-main-content"><p className="nc-checkout-error">{ws.loadError}</p></div>;
@@ -120,6 +122,8 @@ export default function WorkspaceApp() {
     const data = { ...ws.data, id: org.id, name: org.name };
     if (isHome) {
       body = <HomeView data={data} org={org} submissions={submissions} />;
+    } else if (isPack) {
+      body = <PackView data={data} setData={guardedSetData} org={org} submissions={submissions} editable={editable} notify={notify} />;
     } else {
       body = (
         <>

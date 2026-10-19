@@ -178,33 +178,41 @@ export function NCDMBDocShell({ title, companyName, meta, docLabel, children, fi
   return (
     <div>
       <ExportBar fileName={fileName || `${companyName || "Company"} - ${firstLine}`} sheetName={firstLine} />
-      <div id="printable" style={{ background: "#fff", color: "#111", padding: "40px 44px",
-        maxWidth: 800, fontFamily: "'IBM Plex Sans', sans-serif", border: "1px solid #2E3742", borderRadius: 10 }}>
-        <div style={{ textAlign: "center", marginBottom: 18 }}>
-          <div style={{ height: 64, marginBottom: 10 }} />
-          <div style={{ fontWeight: 700, fontSize: 15, letterSpacing: 0.3 }}>
-            NIGERIAN CONTENT DEVELOPMENT AND MONITORING BOARD
-          </div>
-          <div style={{ fontWeight: 700, fontSize: 15 }}>(NCDMB)</div>
-        </div>
-        <div style={{ borderTop: "1px solid #999", marginBottom: 10 }} />
-        <div style={{ background: "#F1F1F1", padding: "14px 16px", marginBottom: 14 }}>
-          <div style={{ fontWeight: 700, fontSize: 13, textAlign: "center" }}>{title}</div>
-        </div>
-        <div style={{ fontSize: 12, marginBottom: 16, display: "flex", flexDirection: "column", gap: 4 }}>
-          <div><strong>Name of Company:</strong> {companyName}</div>
-          {meta}
-        </div>
+      <NCDMBDoc id="printable" title={title} companyName={companyName} meta={meta} docLabel={docLabel}>{children}</NCDMBDoc>
+    </div>
+  );
+}
 
-        {children}
-
-        <div style={{ marginTop: 28, display: "flex", fontSize: 9, color: "#444", borderTop: "1px solid #999" }}>
-          <div style={{ flex: 1, padding: "4px 8px", borderRight: "1px solid #999" }}>
-            Nigerian Content Development and Monitoring Board (NCDMB)
-          </div>
-          <div style={{ padding: "4px 8px", borderRight: "1px solid #999" }}>Version 1.0</div>
-          <div style={{ flex: 1, padding: "4px 8px", textAlign: "right" }}>{docLabel}</div>
+// The printable NCDMB document itself, used on report screens and in the
+// submission pack.
+export function NCDMBDoc({ id, title, companyName, meta, docLabel, children }) {
+  return (
+    <div id={id} style={{ background: "#fff", color: "#111", padding: "40px 44px",
+      maxWidth: 800, fontFamily: "'IBM Plex Sans', sans-serif", border: "1px solid #2E3742", borderRadius: 10 }}>
+      <div style={{ textAlign: "center", marginBottom: 18 }}>
+        <div style={{ height: 64, marginBottom: 10 }} />
+        <div style={{ fontWeight: 700, fontSize: 15, letterSpacing: 0.3 }}>
+          NIGERIAN CONTENT DEVELOPMENT AND MONITORING BOARD
         </div>
+        <div style={{ fontWeight: 700, fontSize: 15 }}>(NCDMB)</div>
+      </div>
+      <div style={{ borderTop: "1px solid #999", marginBottom: 10 }} />
+      <div style={{ background: "#F1F1F1", padding: "14px 16px", marginBottom: 14 }}>
+        <div style={{ fontWeight: 700, fontSize: 13, textAlign: "center" }}>{title}</div>
+      </div>
+      <div style={{ fontSize: 12, marginBottom: 16, display: "flex", flexDirection: "column", gap: 4 }}>
+        <div><strong>Name of Company:</strong> {companyName}</div>
+        {meta}
+      </div>
+
+      {children}
+
+      <div style={{ marginTop: 28, display: "flex", fontSize: 9, color: "#444", borderTop: "1px solid #999" }}>
+        <div style={{ flex: 1, padding: "4px 8px", borderRight: "1px solid #999" }}>
+          Nigerian Content Development and Monitoring Board (NCDMB)
+        </div>
+        <div style={{ padding: "4px 8px", borderRight: "1px solid #999" }}>Version 1.0</div>
+        <div style={{ flex: 1, padding: "4px 8px", textAlign: "right" }}>{docLabel}</div>
       </div>
     </div>
   );

@@ -410,3 +410,25 @@ body { font-family: "IBM Plex Sans", sans-serif; color: var(--nc-text); }
 .nc-price-founding { display:inline-block; margin-top:8px; padding:3px 8px; border-radius:999px; background:rgba(230,162,60,.14); color:#E6A23C; font-size:11.5px; font-weight:600; }
 .nc-founding-banner { border:1px solid rgba(230,162,60,.45); background:rgba(230,162,60,.08); color:var(--nc-text, #EDEFF2); border-radius:10px; padding:12px 16px; margin:0 0 18px; max-width:760px; font-size:14px; line-height:1.5; }
 .nc-founding-banner strong { color:#E6A23C; }
+
+/* Submission pack */
+.nc-pack-controls, .nc-pack-signatory { display:flex; flex-wrap:wrap; gap:12px; align-items:end; margin-bottom:18px; }
+.nc-pack-signatory > * { flex:1 1 220px; }
+.nc-pack-signatory input { width:100%; box-sizing:border-box; }
+.nc-pack .nc-table td svg { vertical-align:-2px; margin-right:6px; }
+.nc-pack-next { border:1px solid rgba(79,174,126,.45); background:rgba(79,174,126,.08); border-radius:10px; padding:12px 16px; font-size:14px; line-height:1.5; }
+.nc-pack-preview { display:flex; flex-direction:column; gap:16px; }
+.nc-cover-letter { background:#fff; color:#111; max-width:800px; box-sizing:border-box; padding:48px 52px; border:1px solid #2E3742; border-radius:10px; font:13px/1.65 "IBM Plex Sans", sans-serif; }
+.nc-cover-letter p { margin:0 0 12px; }
+.nc-cover-letter ol { margin:0 0 12px; padding-left:22px; }
+.nc-cover-head { text-align:right; margin-bottom:22px; }
+.nc-cover-head strong { font-size:15px; }
+.nc-cover-meta { display:flex; justify-content:space-between; margin-bottom:20px; }
+.nc-cover-to { margin-bottom:18px; }
+.nc-cover-subject { font-weight:700; text-decoration:underline; }
+.nc-cover-sign { margin-top:34px; }
+.nc-cover-line { width:220px; border-bottom:1px solid #111; height:40px; margin-bottom:6px; }
+.nc-draft-banner { background:#FDECEA; color:#B03A2E; border:1px solid #E6B0AA; text-align:center; font-weight:700; letter-spacing:.5px; padding:8px; margin:-20px 0 24px; border-radius:6px; }
+.nc-pack-docs summary { cursor:pointer; color:var(--nc-muted, #8D97A3); font-size:14px; margin-bottom:12px; }
+.nc-pack-docs > div { margin-bottom:16px; }
+@media (max-width: 600px) { .nc-cover-letter { padding:28px 22px; } }

@@ -7,6 +7,7 @@ import { WorkspaceBase } from "./base";
 import { REPORT_VIEWS } from "./reportViews";
 import { HomeView } from "../views/HomeView";
 import { SubmissionsView } from "../views/SubmissionsView";
+import { PackView } from "../views/PackView";
 import { reportById } from "../lib/reports";
 import { usePageMeta } from "../lib/usePageMeta";
 import { DEMO_DOCS, DEMO_ORG, DEMO_USER, sampleData, sampleSubmissions } from "../lib/sampleData";
@@ -62,7 +63,7 @@ export default function DemoApp() {
   const saveData = useCallback(async (next) => { setData(next); }, []);
 
   const isReport = Boolean(REPORT_VIEWS[view]);
-  if (view !== "home" && view !== "submissions" && !isReport && !LOCKED[view]) return <Navigate to="/demo" replace />;
+  if (view !== "home" && view !== "submissions" && view !== "pack" && !isReport && !LOCKED[view]) return <Navigate to="/demo" replace />;
 
   const fullData = { ...data, id: DEMO_ORG.id, name: DEMO_ORG.name };
   let body;
@@ -70,6 +71,8 @@ export default function DemoApp() {
     body = <HomeView data={fullData} org={DEMO_ORG} submissions={submissions} demo={{ docs: DEMO_DOCS, memberCount: 4, userEmail: DEMO_USER }} />;
   } else if (view === "submissions") {
     body = <SubmissionsView submissions={submissions} />;
+  } else if (view === "pack") {
+    body = <PackView data={fullData} setData={saveData} org={DEMO_ORG} submissions={submissions} editable notify={notify} demo />;
   } else if (LOCKED[view]) {
     body = (
       <div className="nc-main-content nc-demo-locked">

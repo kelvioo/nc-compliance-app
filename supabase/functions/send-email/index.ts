@@ -1,9 +1,14 @@
 // Transactional emails triggered from the app.
 //
-// POST with a user's JWT: { type: "invite", token } -> { sent: boolean }
-// Emails the invitation link to the invitee. Only the owner/admins of the
-// inviting company can trigger it. If no email provider is configured the
-// function returns { sent: false } and the app falls back to a copyable link.
+// POST with a user's JWT:
+//   { type: "invite", token } -> { sent: boolean }
+//     Emails the invitation link to the invitee. Only the owner/admins of the
+//     inviting company can trigger it. If no email provider is configured the
+//     function returns { sent: false } and the app falls back to a copyable link.
+//   { type: "pack", documentId } -> { sent: boolean, recipients: number }
+//     Emails a 7-day download link for a submission pack the app just saved
+//     to Documents to the company's owners, admins and approvers. Anyone who
+//     can edit the company's data can trigger it.
 //
 // Secrets: RESEND_API_KEY, EMAIL_FROM (e.g. "NC Compliance <hello@yourdomain.com>"),
 //          APP_URL (e.g. https://app.yourdomain.com) — optional, falls back to the request origin.
@@ -43,12 +48,12 @@ function layout(title: string, bodyHtml: string, cta?: { label: string; url: str
   </div></body></html>`;
 }
 
-async function sendEmail(to: string, subject: string, html: string) {
+async function sendEmail(to: string | string[], subject: string, html: string) {
   if (!RESEND_API_KEY || !EMAIL_FROM) return false;
   const res = await fetch("https://api.resend.com/emails", {
     method: "POST",
     headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
-    body: JSON.stringify({ from: EMAIL_FROM, to: [to], subject, html }),
+    body: JSON.stringify({ from: EMAIL_FROM, to: Array.isArray(to) ? to : [to], subject, html }),
   });
   if (!res.ok) console.error("resend error", res.status, await res.text());
   return res.ok;
@@ -60,6 +65,41 @@ function appOrigin(req: Request) {
   return /^https:\/\/[a-z0-9.-]+$/i.test(origin) || /^http:\/\/localhost(:\d+)?$/.test(origin) ? origin : "";
 }
 
+const EDITORS = ["owner", "admin", "approver", "reviewer", "preparer"];
+const PACK_LINK_SECONDS = 7 * 86400;
+
+async function sendPack(user: { id: string; email?: string }, documentId: string, req: Request) {
+  const { data: doc } = await admin.from("documents")
+    .select("id, org_id, title, reference, file_path, file_name, category, organizations(name)")
+    .eq("id", documentId).maybeSingle();
+  if (!doc || doc.category !== "submission_pack" || !doc.file_path) return json({ error: "Pack not found." }, 404);
+
+  const { data: me } = await admin.from("memberships").select("role")
+    .eq("org_id", doc.org_id).eq("user_id", user.id).maybeSingle();
+  if (!me || !EDITORS.includes(me.role)) return json({ error: "Not allowed." }, 403);
+
+  const { data: signed } = await admin.storage.from("documents").createSignedUrl(doc.file_path, PACK_LINK_SECONDS);
+  const { data: recipients } = await admin.rpc("org_notification_emails", { p_org: doc.org_id });
+  const to = [...new Set((recipients ?? []).map((r: { email: string }) => r.email).filter(Boolean))] as string[];
+  if (!signed?.signedUrl || to.length === 0) return json({ sent: false, recipients: 0 });
+
+  const orgName = (doc as any).organizations?.name ?? "your company";
+  const origin = appOrigin(req);
+  const html = layout(
+    doc.title,
+    `<p style="line-height:1.6">${escapeHtml(user.email ?? "A colleague")} has prepared the NCDMB submission pack for <strong>${escapeHtml(orgName)}</strong>: a cover letter and every approved report in one PDF${doc.reference ? ` (ref. ${escapeHtml(doc.reference)})` : ""}.</p>
+     <ol style="line-height:1.8;padding-left:20px">
+       <li>Download the pack and sign the cover letter.</li>
+       <li>Submit it to NCDMB through the portal or NCDMB's official email.</li>
+       <li>In NC Compliance, open each report and click <strong>Record NCDMB submission</strong> with NCDMB's reference.</li>
+     </ol>
+     <p style="line-height:1.6;font-size:13px;color:#6b7580">This download link works for 7 days. The pack is also saved under Documents${origin ? ` in <a href="${origin}/app/documents" style="color:#b97a1c">your workspace</a>` : ""}.</p>`,
+    { label: "Download the pack (PDF)", url: signed.signedUrl },
+  );
+  const sent = await sendEmail(to, `NCDMB submission pack ready: ${doc.title.replace(/^NCDMB submission pack — /, "")} — ${orgName}`, html);
+  return json({ sent, recipients: sent ? to.length : 0 });
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: CORS });
   try {
@@ -68,6 +108,7 @@ Deno.serve(async (req) => {
     if (!user) return json({ error: "Please sign in again." }, 401);
 
     const body = await req.json().catch(() => ({}));
+    if (body.type === "pack" && body.documentId) return await sendPack(user, String(body.documentId), req);
     if (body.type !== "invite" || !body.token) return json({ error: "Unknown email type." }, 400);
 
     const { data: inv } = await admin.from("invitations")

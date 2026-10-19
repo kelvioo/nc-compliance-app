@@ -171,6 +171,7 @@ export const DOCUMENT_CATEGORIES = [
   { id: "ncdf_receipt", label: "NCDF remittance receipt" },
   { id: "ncplan_approval", label: "NC Plan approval" },
   { id: "submission_ack", label: "NCDMB submission acknowledgement" },
+  { id: "submission_pack", label: "NCDMB submission pack" },
   { id: "contractor_cert", label: "Contractor's NCEC certificate" },
   { id: "insurance", label: "Insurance certificate" },
   { id: "other", label: "Other" },

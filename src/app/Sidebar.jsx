@@ -3,7 +3,7 @@ import { Link, NavLink, useNavigate } from "react-router-dom";
 import {
   Gauge, FileText, Users, LogOut, TrendingUp, ClipboardList, ShieldCheck, Leaf, RefreshCw,
   Layers, Ship, Package, CalendarClock, CreditCard, AlertTriangle, Handshake, Settings,
-  UserPlus, ChevronDown, ChevronRight, Plus, Building2, Home, Send, FolderLock, LayoutDashboard, LifeBuoy,
+  UserPlus, ChevronDown, ChevronRight, Plus, Building2, Home, Send, FolderLock, LayoutDashboard, LifeBuoy, PackageCheck,
 } from "lucide-react";
 import { supabase } from "../lib/supabase";
 import { roleLabel } from "../lib/roles";
@@ -13,6 +13,7 @@ import { useWorkspaceBase } from "./base";
 const MAIN_ITEMS = [
   { id: "home", label: "Home", icon: Home },
   { id: "submissions", label: "Submissions", icon: Send },
+  { id: "pack", label: "Submission pack", icon: PackageCheck },
   { id: "documents", label: "Documents", icon: FolderLock },
 ];
 

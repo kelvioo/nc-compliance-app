@@ -32,38 +32,48 @@ function whiteCopy(el) {
   return { node: copy, done: () => holder.remove() };
 }
 
-export async function downloadPdf(el, fileName) {
+// Renders one or more report elements into an A4 PDF; each element starts
+// on a new page.
+export async function buildPdf(elements) {
   const [{ default: html2canvas }, { jsPDF }] = await Promise.all([import("html2canvas-pro"), import("jspdf")]);
-  const { node, done } = whiteCopy(el);
-  try {
-    await document.fonts?.ready;
-    const canvas = await html2canvas(node, { scale: 2, backgroundColor: "#ffffff", useCORS: true, logging: false });
-    const pdf = new jsPDF({ unit: "pt", format: "a4", orientation: "portrait" });
-    const margin = 28;
-    const pageW = pdf.internal.pageSize.getWidth() - margin * 2;
-    const pageH = pdf.internal.pageSize.getHeight() - margin * 2;
-    const pxPerPt = canvas.width / pageW;
-    const sliceH = Math.floor(pageH * pxPerPt);
+  await document.fonts?.ready;
+  const pdf = new jsPDF({ unit: "pt", format: "a4", orientation: "portrait" });
+  const margin = 28;
+  const pageW = pdf.internal.pageSize.getWidth() - margin * 2;
+  const pageH = pdf.internal.pageSize.getHeight() - margin * 2;
+  let first = true;
+  for (const el of elements) {
+    const { node, done } = whiteCopy(el);
+    try {
+      const canvas = await html2canvas(node, { scale: 2, backgroundColor: "#ffffff", useCORS: true, logging: false });
+      const pxPerPt = canvas.width / pageW;
+      const sliceH = Math.floor(pageH * pxPerPt);
 
-    // Cut the tall image into A4 pages, preferring to break on a white row
-    // so text lines aren't split across pages.
-    const ctx = canvas.getContext("2d");
-    let y = 0;
-    while (y < canvas.height) {
-      let h = Math.min(sliceH, canvas.height - y);
-      if (y + h < canvas.height) h = findWhiteRow(ctx, canvas.width, y + h, Math.floor(h * 0.2)) - y;
-      const page = document.createElement("canvas");
-      page.width = canvas.width;
-      page.height = h;
-      page.getContext("2d").drawImage(canvas, 0, y, canvas.width, h, 0, 0, canvas.width, h);
-      if (y > 0) pdf.addPage();
-      pdf.addImage(page.toDataURL("image/jpeg", 0.92), "JPEG", margin, margin, pageW, h / pxPerPt);
-      y += h;
+      // Cut the tall image into A4 pages, preferring to break on a white row
+      // so text lines aren't split across pages.
+      const ctx = canvas.getContext("2d");
+      let y = 0;
+      while (y < canvas.height) {
+        let h = Math.min(sliceH, canvas.height - y);
+        if (y + h < canvas.height) h = findWhiteRow(ctx, canvas.width, y + h, Math.floor(h * 0.2)) - y;
+        const page = document.createElement("canvas");
+        page.width = canvas.width;
+        page.height = h;
+        page.getContext("2d").drawImage(canvas, 0, y, canvas.width, h, 0, 0, canvas.width, h);
+        if (!first) pdf.addPage();
+        first = false;
+        pdf.addImage(page.toDataURL("image/jpeg", 0.92), "JPEG", margin, margin, pageW, h / pxPerPt);
+        y += h;
+      }
+    } finally {
+      done();
     }
-    pdf.save(`${fileName}.pdf`);
-  } finally {
-    done();
   }
+  return pdf;
+}
+
+export async function downloadPdf(el, fileName) {
+  (await buildPdf([el])).save(`${fileName}.pdf`);
 }
 
 function findWhiteRow(ctx, width, fromY, maxBack) {
@@ -91,10 +101,9 @@ function cell(text, bold) {
   return { value, type: String, fontWeight: bold ? "bold" : undefined, wrap: true };
 }
 
-// Turns the report into a spreadsheet: the title and details at the top,
+// Turns a report into spreadsheet rows: the title and details at the top,
 // then every table in the report (with its heading), numbers kept as numbers.
-export async function downloadExcel(el, fileName, sheetName = "Report") {
-  const { default: writeXlsxFile } = await import("write-excel-file/browser");
+function sheetFor(el, sheetName) {
   const rows = [];
   const blank = () => rows.push([null]);
   let widest = 1;
@@ -130,5 +139,25 @@ export async function downloadExcel(el, fileName, sheetName = "Report") {
   while (rows.length && rows[rows.length - 1][0] === null && rows[rows.length - 1].length === 1) rows.pop();
 
   const columns = Array.from({ length: widest }, (_, i) => ({ width: i === 0 ? 34 : 20 }));
-  await writeXlsxFile(rows, { sheet: sheetName.slice(0, 31).replace(/[\\/?*[\]:]/g, " "), columns }).toFile(`${fileName}.xlsx`);
+  return { data: rows, sheet: sheetName.slice(0, 31).replace(/[\\/?*[\]:]/g, " "), columns };
+}
+
+export async function downloadExcel(el, fileName, sheetName = "Report") {
+  const { default: writeXlsxFile } = await import("write-excel-file/browser");
+  const { data, ...options } = sheetFor(el, sheetName);
+  await writeXlsxFile(data, options).toFile(`${fileName}.xlsx`);
+}
+
+// One workbook with a sheet per report, for the submission pack.
+export async function downloadExcelWorkbook(sheets, fileName) {
+  const { default: writeXlsxFile } = await import("write-excel-file/browser");
+  const used = new Set();
+  const all = sheets.map(({ el, name }) => {
+    const sheet = sheetFor(el, name);
+    let unique = sheet.sheet;
+    for (let n = 2; used.has(unique.toLowerCase()); n++) unique = `${sheet.sheet.slice(0, 27)} (${n})`;
+    used.add(unique.toLowerCase());
+    return { ...sheet, sheet: unique };
+  });
+  await writeXlsxFile(all).toFile(`${fileName}.xlsx`);
 }

@@ -63,6 +63,15 @@ const GUIDES = [
           <li><b>Employment & Training, R&D, Technology Transfer, Insurance, Legal, Financial services</b>: fill in the plan and log activities as they happen.</li>
         </ul>
       </> },
+      { q: "How do I prepare everything for NCDMB at once?", a: <>
+        <p>Open <b>Submission pack</b>. Choose the quarterly reports or the NC Performance Report (§60) and the period. You'll see every report in the pack and whether it's approved.</p>
+        <ul>
+          <li>Enter who signs the cover letter once; it's remembered.</li>
+          <li><b>Download pack (PDF)</b> gives you a cover letter addressed to NCDMB plus every report, in one file. <b>Download all reports (Excel)</b> gives one workbook with a sheet per report.</li>
+          <li>Until every report is approved, the pack is marked <b>DRAFT</b>. Once they are, <b>Save to Documents & email approvers</b> stores the pack and emails your owners, admins and approvers a download link.</li>
+        </ul>
+        <p>Then submit the pack through NCDMB's portal or official email, and record each submission with NCDMB's reference. There's no public way for software to file with NCDMB on a company's behalf, so the final submission comes from your company.</p>
+      </> },
       { q: "How do I download a report for submission?", a: <>
         <p>Every report has three buttons at the top:</p>
         <ul>

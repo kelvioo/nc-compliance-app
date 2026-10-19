@@ -36,6 +36,10 @@ const DEADLINE_LEADS = [14, 7, 3, 1];
 const TRIAL_LEADS = [3, 1];
 const RENEWAL_LEADS = [30, 7];
 
+const QUARTERLY_IDS = ["forecast", "procMaterials", "procServices", "marine"];
+const STATUS_LABEL: Record<string, string> = {
+  draft: "Not started", in_review: "In review", reviewed: "Reviewed", approved: "Approved", submitted: "Submitted to NCDMB",
+};
 const QUARTERLY_REPORTS = [
   "Job Forecast Report (§18)",
   "Procurement Report — Materials (§24)",
@@ -57,7 +61,8 @@ const pretty = (t: number) =>
 
 function upcomingDeadlines(today: number) {
   const year = new Date(today).getUTCFullYear();
-  const list: { key: string; deadline: number; title: string; reports: string[] }[] = [];
+  // `period` and `ids` match the app's submissions (report_key, period).
+  const list: { key: string; deadline: number; title: string; reports: string[]; period: string; ids: string[] }[] = [];
   for (const y of [year, year + 1]) {
     for (let q = 0; q < 4; q++) {
       const start = Date.UTC(y, q * 3, 1);
@@ -66,6 +71,8 @@ function upcomingDeadlines(today: number) {
         deadline: start - 30 * DAY,
         title: `Q${q + 1} ${y} quarterly NCDMB reports`,
         reports: QUARTERLY_REPORTS,
+        period: `${y}-Q${q + 1}`,
+        ids: QUARTERLY_IDS,
       });
     }
     list.push({
@@ -73,6 +80,8 @@ function upcomingDeadlines(today: number) {
       deadline: Date.UTC(y, 0, 1) + 60 * DAY,
       title: `${y} NC Performance Report (§60)`,
       reports: ["NC Performance Report (§60)"],
+      period: String(y - 1),
+      ids: ["annual"],
     });
   }
   return list.filter((d) => d.deadline >= today);
@@ -148,6 +157,9 @@ Deno.serve(async (req) => {
     .select("id, name, subscription_status, trial_ends_at, current_period_end, created_at");
   if (error) return new Response(error.message, { status: 500 });
   const { data: workspaces } = await admin.from("workspaces").select("org_id, entries:data->entries");
+  const { data: subs } = await admin.from("submissions").select("org_id, report_key, period, status");
+  const subStatus = new Map(((subs ?? []) as { org_id: string; report_key: string; period: string; status: string }[])
+    .map((r) => [`${r.org_id}:${r.report_key}:${r.period}`, r.status]));
   const entryCount = new Map(((workspaces ?? []) as { org_id: string; entries: unknown }[])
     .map((w) => [w.org_id, Array.isArray(w.entries) ? w.entries.length : 0]));
 
@@ -162,11 +174,16 @@ Deno.serve(async (req) => {
         const subject = `${d.lead === 1 ? "Due tomorrow" : `Due in ${d.lead} days`}: ${d.title} — ${org.name}`;
         planned.push(`${org.name}: ${subject}`);
         if (!CAN_SEND) continue;
+        const statuses = d.ids.map((id) => subStatus.get(`${org.id}:${id}:${d.period}`) ?? "draft");
+        const ready = statuses.filter((st) => st === "approved" || st === "submitted").length;
         const html = layout(
           `${d.title} due ${pretty(d.deadline)}`,
           `<p style="line-height:1.6">These submissions for <strong>${escapeHtml(org.name)}</strong> are due to NCDMB in <strong>${d.lead} day${d.lead === 1 ? "" : "s"}</strong>:</p>
-           <ul style="line-height:1.8">${d.reports.map((r) => `<li>${escapeHtml(r)}</li>`).join("")}</ul>`,
-          { label: "Open compliance calendar", url: `${APP_URL}/app/calendar` },
+           <ul style="line-height:1.8">${d.reports.map((r, i) => `<li>${escapeHtml(r)} — <strong>${STATUS_LABEL[statuses[i]] ?? "Not started"}</strong></li>`).join("")}</ul>
+           <p style="line-height:1.6">${ready === statuses.length
+             ? "Every report is approved. Your submission pack (cover letter and all reports in one PDF) is ready to download and submit."
+             : `${ready} of ${statuses.length} approved. Once the rest are approved, the submission pack puts the cover letter and every report in one PDF.`}</p>`,
+          { label: "Open submission pack", url: `${APP_URL}/app/pack` },
         );
         await remind(org, d.key, d.deadline, d.lead, subject, html, sent);
       }
