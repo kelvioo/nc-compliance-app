@@ -22,7 +22,7 @@ export const DEMO_ORG = {
   plan: "trial",
 };
 
-export const DEMO_USER = "tolu.abubakar@deltabasin.example";
+export const DEMO_USER = "adewale.abubakar@deltabasin.example";
 
 const entry = (daysAgo, category, vendor, amount, project, note = "") => ({
   id: id(), date: ago(daysAgo), category, vendor, amount, originalAmount: amount, fxRate: null,
