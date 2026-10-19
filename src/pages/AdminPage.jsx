@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { ArrowLeft, Building2, Users, CreditCard, Activity, LayoutDashboard, Search, RefreshCw, LogOut, Target } from "lucide-react";
+import { ArrowLeft, Building2, Users, CreditCard, Activity, LayoutDashboard, Search, RefreshCw, LogOut, Target, Mail } from "lucide-react";
 import { supabase } from "../lib/supabase";
 import { useAuth } from "../auth/AuthProvider";
 import { friendlyError } from "../lib/errors";
@@ -36,6 +36,7 @@ const TABS = [
   { id: "users", label: "Users", icon: Users },
   { id: "payments", label: "Payments", icon: CreditCard },
   { id: "leads", label: "Leads", icon: Target },
+  { id: "messages", label: "Messages", icon: Mail },
   { id: "activity", label: "Activity", icon: Activity },
 ];
 
@@ -106,6 +107,7 @@ export default function AdminPage() {
   const [payments, setPayments] = useState([]);
   const [activity, setActivity] = useState([]);
   const [leads, setLeads] = useState([]);
+  const [messages, setMessages] = useState([]);
   const [query, setQuery] = useState("");
   const [managing, setManaging] = useState(null);
   const [toast, setToast] = useState(null);
@@ -115,14 +117,16 @@ export default function AdminPage() {
 
   const load = useCallback(async () => {
     setLoading(true);
-    const [o, c, u, p, a, l] = await Promise.all([
+    const [o, c, u, p, a, l, m] = await Promise.all([
       supabase.rpc("admin_overview"), supabase.rpc("admin_companies"), supabase.rpc("admin_users"),
       supabase.rpc("admin_payments"), supabase.rpc("admin_activity"), supabase.rpc("admin_leads"),
+      supabase.rpc("admin_contact_messages"),
     ]);
-    const err = [o, c, u, p, a, l].find((r) => r.error)?.error;
+    const err = [o, c, u, p, a, l, m].find((r) => r.error)?.error;
     if (err) notify(friendlyError(err));
     setOverview(o.data); setCompanies(c.data || []); setUsers(u.data || []); setPayments(p.data || []); setActivity(a.data || []);
     setLeads(l.data || []);
+    setMessages(m.data || []);
     setLoading(false);
   }, [notify]);
 
@@ -303,6 +307,25 @@ export default function AdminPage() {
                     </tr>
                   );
                 })}
+              </tbody>
+            </table>
+          </div>
+        )}
+
+        {tab === "messages" && (
+          <div className="nc-table-card">
+            <table className="nc-table">
+              <thead><tr><th>Date</th><th>From</th><th>Topic</th><th>Message</th></tr></thead>
+              <tbody>
+                {messages.length === 0 && <tr><td colSpan={4} className="nc-muted-sm">No messages yet. Enquiries from the contact page (nccompliance.com.ng/contact) appear here and are emailed to you.</td></tr>}
+                {messages.map((m) => (
+                  <tr key={m.id}>
+                    <td style={{ whiteSpace: "nowrap" }}>{fmtTime(m.created_at)}</td>
+                    <td>{m.name}{m.company && <div className="nc-muted-sm">{m.company}</div>}<div><a href={`mailto:${m.email}`}>{m.email}</a></div>{m.phone && <div><a href={`tel:${m.phone.replace(/\s/g, "")}`}>{m.phone}</a></div>}</td>
+                    <td><span className="nc-chip is-info">{m.topic}</span></td>
+                    <td style={{ whiteSpace: "pre-wrap", maxWidth: 420 }}>{m.message}</td>
+                  </tr>
+                ))}
               </tbody>
             </table>
           </div>

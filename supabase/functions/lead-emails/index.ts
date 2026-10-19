@@ -5,9 +5,12 @@
 //                      failed, then the day-2 and day-5 follow-ups to leads
 //                      who haven't signed up or unsubscribed.
 //   GET ?unsubscribe=<token>  link in every email; stops all follow-ups.
+//   POST { contact_id } from the contact_messages insert trigger: email the
+//                      enquiry to the product owner (reply-to the sender)
+//                      and send the sender an acknowledgement.
 //
 // POSTs must carry the cron secret from Vault (x-cron-secret). Deployed with
-// verify_jwt = false. Secrets: RESEND_API_KEY, EMAIL_FROM, APP_URL.
+// verify_jwt = false. Secrets: RESEND_API_KEY, EMAIL_FROM, APP_URL, ADMIN_EMAIL.
 import { createClient } from "npm:@supabase/supabase-js@2";
 
 const admin = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!, {
@@ -17,6 +20,7 @@ const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY") ?? "";
 const EMAIL_FROM = Deno.env.get("EMAIL_FROM") ?? "";
 const APP_URL = (Deno.env.get("APP_URL") || "https://nccompliance.com.ng").replace(/\/$/, "");
 const SELF_URL = `${Deno.env.get("SUPABASE_URL")}/functions/v1/lead-emails`;
+const ADMIN_EMAIL = Deno.env.get("ADMIN_EMAIL") ?? "";
 const DAY = 86400000;
 
 type Lead = {
@@ -90,12 +94,12 @@ function nurture2(lead: Lead) {
     { label: "Start my free trial", url: `${APP_URL}/signup?email=${encodeURIComponent(lead.email)}` });
 }
 
-async function send(to: string, subject: string, html: string) {
+async function send(to: string, subject: string, html: string, replyTo?: string) {
   if (!RESEND_API_KEY || !EMAIL_FROM) return false;
   const res = await fetch("https://api.resend.com/emails", {
     method: "POST",
     headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
-    body: JSON.stringify({ from: EMAIL_FROM, to: [to], subject, html }),
+    body: JSON.stringify({ from: EMAIL_FROM, to: [to], subject, html, ...(replyTo ? { reply_to: replyTo } : {}) }),
   });
   if (!res.ok) console.error("resend error", res.status, await res.text());
   return res.ok;
@@ -136,6 +140,41 @@ async function sweep() {
   return log;
 }
 
+const TOPICS: Record<string, string> = {
+  general: "General question", demo: "Book a walkthrough", pricing: "Pricing", invoice: "Pay by invoice",
+  support: "Help with my account", partnership: "Partnership",
+};
+
+// Enquiry from the contact page: to the owner (reply goes to the sender),
+// plus an acknowledgement to the sender. Claimed first so it sends once.
+async function contact(id: string) {
+  const { data: claimed } = await admin.from("contact_messages").update({ notified_at: new Date().toISOString() })
+    .eq("id", id).is("notified_at", null).select("name, company, email, phone, topic, message");
+  const m = claimed?.[0] as { name: string; company: string | null; email: string; phone: string | null; topic: string; message: string } | undefined;
+  if (!m) return false;
+  const topic = TOPICS[m.topic] ?? "Enquiry";
+  const box = (inner: string) => `<!doctype html><html><body style="margin:0;background:#f4f5f7;font-family:Arial,Helvetica,sans-serif;color:#1d2329">
+    <div style="max-width:580px;margin:0 auto;padding:32px 16px">
+      <div style="margin-bottom:16px"><img src="${APP_URL}/email-logo.png" width="190" height="39" alt="NC Compliance" style="display:block;border:0"></div>
+      <div style="background:#fff;border-radius:10px;padding:28px;border:1px solid #e3e6ea">${inner}</div>
+    </div></body></html>`;
+  let ok = true;
+  if (ADMIN_EMAIL) {
+    ok = await send(ADMIN_EMAIL, `New enquiry (${topic}): ${m.name}${m.company ? `, ${m.company}` : ""}`, box(`
+      <h1 style="font-size:20px;margin:0 0 14px">${esc(topic)}</h1>
+      <p style="line-height:1.6;margin:0 0 4px"><strong>${esc(m.name)}</strong>${m.company ? ` · ${esc(m.company)}` : ""}</p>
+      <p style="line-height:1.6;margin:0 0 16px"><a href="mailto:${esc(m.email)}">${esc(m.email)}</a>${m.phone ? ` · ${esc(m.phone)}` : ""}</p>
+      <div style="white-space:pre-wrap;line-height:1.6;border-left:3px solid #E6A23C;padding-left:12px">${esc(m.message)}</div>
+      <p style="font-size:12px;color:#6b7580;margin-top:20px">Reply to this email to answer ${esc(first(m.name))} directly.</p>`), m.email);
+  }
+  await send(m.email, "We've received your message — NC Compliance", box(`
+    <h1 style="font-size:20px;margin:0 0 14px">Thanks, ${esc(first(m.name))}</h1>
+    <p style="line-height:1.6">We've received your message and will reply within one working day.</p>
+    <p style="line-height:1.6">In the meantime, you can explore a complete sample company in the <a href="${APP_URL}/demo" style="color:#b97a1c">live demo</a>, or see which NCDMB reports your company owes with the free <a href="${APP_URL}/check" style="color:#b97a1c">2-minute compliance check</a>.</p>
+    <p style="font-size:12px;color:#6b7580;margin-top:20px">Your message: “${esc(m.message.slice(0, 300))}${m.message.length > 300 ? "…" : ""}”</p>`));
+  return ok;
+}
+
 const page = (msg: string) => new Response(`<!doctype html><html><head><meta name="viewport" content="width=device-width,initial-scale=1"><title>NC Compliance</title></head>
   <body style="margin:0;background:#0F1216;color:#EDEFF2;font-family:Arial,Helvetica,sans-serif;display:flex;min-height:100vh;align-items:center;justify-content:center;padding:24px;box-sizing:border-box">
   <div style="max-width:420px;text-align:center"><p style="font-size:18px;line-height:1.5">${msg}</p><p><a href="${APP_URL}" style="color:#E6A23C">nccompliance.com.ng</a></p></div></body></html>`,
@@ -155,6 +194,7 @@ Deno.serve(async (req) => {
   const body = await req.json().catch(() => ({}));
 
   if (body.sweep) return Response.json({ sent: await sweep() });
+  if (body.contact_id) return Response.json({ sent: await contact(String(body.contact_id)) });
 
   if (body.lead_id) {
     const { data: lead } = await admin.from("leads").select(COLS).eq("id", String(body.lead_id)).maybeSingle();

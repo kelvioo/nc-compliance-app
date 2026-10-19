@@ -1,6 +1,7 @@
+import { useState } from "react";
 import { Link } from "react-router-dom";
 import {
-  ArrowRight, CalendarClock, CheckCircle2, ClipboardList, FileText, ShieldCheck, BellRing, History, Send, FolderLock,
+  ArrowRight, CalendarClock, CheckCircle2, ClipboardList, FileText, ShieldCheck, BellRing, History, Send, FolderLock, PackageCheck,
 } from "lucide-react";
 import { useAuth } from "../auth/AuthProvider";
 import { FOUNDING, PLANS, TRIAL_DAYS } from "../lib/plans";
@@ -18,12 +19,41 @@ const FEATURES = [
   { icon: FolderLock, title: "Certificates that never lapse", text: "Store your NCEC certificate, expatriate quota approvals and NCDF receipts. We warn you 30 days before anything expires." },
   { icon: ClipboardList, title: "One log, every report", text: "Record Nigerian vs foreign spend, contracts, expatriate positions and vessels once. Every template pulls from the same numbers." },
   { icon: History, title: "Audit trail", text: "See who changed what, who approved it and when. Everyone signs in with their own account and role." },
+  { icon: PackageCheck, title: "One-click submission pack", text: "At period end, get a cover letter addressed to NCDMB and every approved report in a single PDF, ready to sign and submit." },
 ];
+
+const SHOTS = [
+  { id: "home", label: "Home", src: "/screens/home.webp", caption: "Upcoming NCDMB deadlines, approval status and expiring certificates at a glance.", demo: "/demo" },
+  { id: "report", label: "NCDMB reports", src: "/screens/report.webp", caption: "Reports laid out like NCDMB's templates, ready to download as PDF or Excel.", demo: "/demo/forecast" },
+  { id: "approvals", label: "Approvals", src: "/screens/approvals.webp", caption: "Every report moves from preparation to review, approval and NCDMB submission.", demo: "/demo/submissions" },
+  { id: "pack", label: "Submission pack", src: "/screens/pack.webp", caption: "A cover letter and every report for the period in one PDF.", demo: "/demo/pack" },
+];
+
+function Showcase() {
+  const [active, setActive] = useState(SHOTS[0].id);
+  const shot = SHOTS.find((s) => s.id === active);
+  return (
+    <section id="product" className="nc-section nc-showcase">
+      <h2>See it in action</h2>
+      <p className="nc-section-sub">The real app, shown with our sample company. Open the live demo to click through it yourself.</p>
+      <div className="nc-showcase-tabs" role="tablist">
+        {SHOTS.map((s) => (
+          <button key={s.id} role="tab" aria-selected={s.id === active} className={s.id === active ? "is-active" : ""} onClick={() => setActive(s.id)}>{s.label}</button>
+        ))}
+      </div>
+      <figure className="nc-showcase-frame">
+        <div className="nc-showcase-chrome"><i /><i /><i /><span>nccompliance.com.ng/app</span></div>
+        <img src={shot.src} alt={`${shot.label}: ${shot.caption}`} width="1200" height="750" loading="lazy" />
+      </figure>
+      <p className="nc-showcase-caption">{shot.caption} <Link to={shot.demo}>Try it in the demo <ArrowRight size={14} /></Link></p>
+    </section>
+  );
+}
 
 const STEPS = [
   { n: "1", title: "Create your workspace", text: "Sign up with your work email and add your company. Takes two minutes." },
   { n: "2", title: "Log your activity", text: "Enter spend, contracts, expatriate positions and vessels as they happen, in one shared workspace." },
-  { n: "3", title: "Generate and submit", text: "Open any NCDMB report, review it with your team, and print or export it for submission." },
+  { n: "3", title: "Approve and submit", text: "Your team reviews and approves each report, then you download the whole submission pack — cover letter and reports — in one PDF." },
 ];
 
 const FAQ = [
@@ -32,6 +62,10 @@ const FAQ = [
   { q: "Do I need a card to start the trial?", a: `No. You get ${TRIAL_DAYS} days with every feature. At the end, choose a plan to keep editing — your data stays safe and readable either way.` },
   { q: "Can we pay by invoice or bank transfer?", a: `Yes. Card payments go through Paystack; for procurement-led purchases we can issue an invoice instead${SUPPORT_EMAIL ? ` — email ${SUPPORT_EMAIL}` : ""}.` },
   { q: "We're a consultancy preparing reports for several clients. Does that work?", a: "Yes. One login can belong to several company workspaces, and you can switch between them from the sidebar." },
+  { q: "Which NCDMB reports does it cover?", a: "Job Forecast (§18), Procurement — Materials and Services, and Marine (§24), Succession Plan (§33), NC Performance (§60), NCDF & NCFCC (§104), the NC Plan, and the Employment & Training, R&D, Technology Transfer, Insurance, Legal and Financial services reports." },
+  { q: "Can NC Compliance submit to NCDMB for us?", a: "NCDMB doesn't offer a public way for software to file on a company's behalf, so the final submission comes from your company. NC Compliance prepares everything up to that point: approved reports and a cover letter in one PDF, ready to upload or email to NCDMB." },
+  { q: "What happens when the trial ends?", a: "Your workspace becomes read-only until you choose a plan. Nothing is deleted, and you can still view and download everything." },
+  { q: "Can you help us get started or move our spreadsheets in?", a: "Yes. Send us a message from the contact page and we'll help you set up your workspace and bring your existing records across. Enterprise plans include guided onboarding." },
 ];
 
 export default function Landing() {
@@ -47,11 +81,11 @@ export default function Landing() {
         <Brand />
         <nav>
           <a href="#features">Features</a>
-          <a href="#reports">Reports</a>
+          <a href="#product">Product</a>
           <a href="#pricing">Pricing</a>
           <Link to="/demo">Live demo</Link>
           <Link to="/check">Free check</Link>
-          <a href="#faq">FAQ</a>
+          <Link to="/about">About</Link>
         </nav>
         <div className="nc-landing-nav-cta">
           {user ? (
@@ -111,6 +145,8 @@ export default function Landing() {
         </div>
         <Link to="/check" className="nc-btn nc-btn-primary">Check my compliance <ArrowRight size={16} /></Link>
       </section>
+
+      <Showcase />
 
       <section id="features" className="nc-section">
         <h2>Everything your compliance desk needs, in one place</h2>
@@ -175,6 +211,7 @@ export default function Landing() {
 
       <section id="faq" className="nc-section nc-faq">
         <h2>Questions</h2>
+        <p className="nc-section-sub">Read how we protect your data on our <Link to="/security">security page</Link>, or <Link to="/contact">send us a question</Link>.</p>
         {FAQ.map((f) => (
           <details key={f.q}>
             <summary>{f.q}</summary>

@@ -17,6 +17,10 @@ const AdminPage = lazy(() => import("./pages/AdminPage"));
 const DemoApp = lazy(() => import("./app/DemoApp"));
 const ComplianceCheck = lazy(() => import("./pages/ComplianceCheck"));
 const HelpPage = lazy(() => import("./pages/HelpPage"));
+const AboutPage = lazy(() => import("./pages/AboutPage"));
+const SecurityPage = lazy(() => import("./pages/SecurityPage"));
+const ContactPage = lazy(() => import("./pages/ContactPage"));
+const DeadlinesPage = lazy(() => import("./pages/DeadlinesPage"));
 
 function RequireAuth({ children }) {
   const { user, loading } = useAuth();
@@ -44,6 +48,10 @@ export default function App() {
       <Route path="/demo" element={<Suspense fallback={<FullPageLoader label="Loading the demo…" />}><DemoApp /></Suspense>} />
       <Route path="/demo/:view" element={<Suspense fallback={<FullPageLoader label="Loading the demo…" />}><DemoApp /></Suspense>} />
       <Route path="/help" element={<Suspense fallback={<FullPageLoader />}><HelpPage /></Suspense>} />
+      <Route path="/about" element={<Suspense fallback={<FullPageLoader />}><AboutPage /></Suspense>} />
+      <Route path="/security" element={<Suspense fallback={<FullPageLoader />}><SecurityPage /></Suspense>} />
+      <Route path="/contact" element={<Suspense fallback={<FullPageLoader />}><ContactPage /></Suspense>} />
+      <Route path="/ncdmb-deadlines" element={<Suspense fallback={<FullPageLoader />}><DeadlinesPage /></Suspense>} />
       <Route path="/check" element={<Suspense fallback={<FullPageLoader />}><ComplianceCheck /></Suspense>} />
       <Route path="/invite/:token" element={<InvitePage />} />
       <Route path="/onboarding" element={<RequireAuth><Onboarding /></RequireAuth>} />

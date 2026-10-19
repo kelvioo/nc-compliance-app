@@ -266,11 +266,16 @@ export function LinkedInIcon({ size = 14 }) {
 export function LegalFooter() {
   return (
     <footer className="nc-landing-footer">
-      <Brand size={14} />
-      <span>Independent software. Not affiliated with or endorsed by NCDMB.</span>
+      <span className="nc-footer-brand">
+        <Brand size={14} />
+        <span>Port Harcourt, Nigeria · Independent software, not affiliated with or endorsed by NCDMB.</span>
+      </span>
       <span className="nc-footer-links">
+        <Link to="/about">About</Link>
+        <Link to="/security">Security</Link>
+        <Link to="/ncdmb-deadlines">NCDMB deadlines</Link>
         <Link to="/help">Help</Link>
-        {SUPPORT_EMAIL && <a href={`mailto:${SUPPORT_EMAIL}`}>Contact</a>}
+        <Link to="/contact">Contact</Link>
         <Link to="/privacy">Privacy</Link>
         <Link to="/terms">Terms</Link>
         <a href={LINKEDIN_URL} target="_blank" rel="noopener noreferrer" className="nc-footer-linkedin" aria-label="NC Compliance on LinkedIn">
