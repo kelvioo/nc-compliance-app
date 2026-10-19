@@ -182,8 +182,9 @@ body { font-family: "IBM Plex Sans", sans-serif; color: var(--nc-text); }
 .nc-faq details p { color:var(--nc-muted); font-size:14px; line-height:1.65; margin:12px 0 0; }
 .nc-final-cta { text-align:center; padding:72px 16px; border-top:1px solid #1A2028; background:radial-gradient(700px 300px at 50% 100%, rgba(230,162,60,.10), transparent); }
 .nc-final-cta p { color:var(--nc-muted); margin:0 0 24px; }
-.nc-footer-links { display:flex; gap:16px; align-items:center; }
+.nc-footer-links { display:flex; flex-wrap:wrap; gap:8px 16px; align-items:center; }
 .nc-footer-links a { color:var(--nc-muted); text-decoration:none; } .nc-footer-links a:hover { color:var(--nc-text); }
+.nc-footer-linkedin { display:inline-flex; align-items:center; gap:6px; } .nc-footer-linkedin:hover { color:#0A66C2 !important; }
 .nc-brand-link { text-decoration:none; }
 .nc-legal .nc-landing-nav, .nc-check .nc-landing-nav { justify-content:space-between; }
 .nc-legal-body { max-width:760px; margin:0 auto; padding:48px 16px 72px; color:#C9CFD6; font-size:15px; line-height:1.7; }

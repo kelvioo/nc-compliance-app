@@ -38,7 +38,8 @@ function layout(title: string, bodyHtml: string, cta?: { label: string; url: str
       ${cta ? `<p style="margin:26px 0 6px"><a href="${cta.url}" style="background:#E6A23C;color:#1A1103;text-decoration:none;padding:12px 20px;border-radius:6px;font-weight:bold;display:inline-block">${escapeHtml(cta.label)}</a></p>
       <p style="font-size:12px;color:#6b7580;word-break:break-all">Or paste this link into your browser: ${cta.url}</p>` : ""}
     </div>
-    <p style="font-size:11px;color:#8a939c;margin-top:16px">NC Compliance is independent software and is not affiliated with NCDMB.</p>
+    <p style="font-size:11px;color:#8a939c;margin:16px 0 0"><a href="https://www.linkedin.com/company/nc-compliance" style="color:#0A66C2;text-decoration:none;font-weight:bold">Follow NC Compliance on LinkedIn</a> for NCDMB deadline reminders and tips.</p>
+    <p style="font-size:11px;color:#8a939c;margin-top:8px">NC Compliance is independent software and is not affiliated with NCDMB.</p>
   </div></body></html>`;
 }
 

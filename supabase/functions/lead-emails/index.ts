@@ -44,7 +44,8 @@ function shell(lead: Lead, title: string, body: string, cta: { label: string; ur
       ${body}
       <p style="margin:26px 0 6px"><a href="${cta.url}" style="background:#E6A23C;color:#1A1103;text-decoration:none;padding:12px 20px;border-radius:6px;font-weight:bold;display:inline-block">${esc(cta.label)}</a></p>
     </div>
-    <p style="font-size:11px;color:#8a939c;margin-top:16px;line-height:1.6">You're receiving this because you took the free NC Compliance Check at nccompliance.com.ng and asked for your results.
+    <p style="font-size:11px;color:#8a939c;margin:16px 0 0"><a href="https://www.linkedin.com/company/nc-compliance" style="color:#0A66C2;text-decoration:none;font-weight:bold">Follow NC Compliance on LinkedIn</a> for NCDMB deadline reminders and tips.</p>
+    <p style="font-size:11px;color:#8a939c;margin-top:8px;line-height:1.6">You're receiving this because you took the free NC Compliance Check at nccompliance.com.ng and asked for your results.
     <a href="${unsub}" style="color:#8a939c">Unsubscribe</a> · NC Compliance is independent software, not affiliated with NCDMB.</p>
   </div></body></html>`;
 }

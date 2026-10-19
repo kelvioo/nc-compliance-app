@@ -2,10 +2,10 @@ import { useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { Search, Mail } from "lucide-react";
 import { Brand } from "../components/ui";
-import { SUPPORT_EMAIL } from "../lib/config";
+import { LINKEDIN_URL, SUPPORT_EMAIL } from "../lib/config";
 import { TRIAL_DAYS } from "../lib/plans";
 import { usePageMeta } from "../lib/usePageMeta";
-import { LegalFooter } from "./LegalPage";
+import { LegalFooter, LinkedInIcon } from "./LegalPage";
 
 const A = ({ to, children }) => <Link to={to}>{children}</Link>;
 
@@ -166,6 +166,10 @@ export default function HelpPage() {
             <div><strong>Still stuck?</strong> Email <a href={`mailto:${SUPPORT_EMAIL}`}>{SUPPORT_EMAIL}</a> with your company name and what you were trying to do.</div>
           </div>
         )}
+        <div className="nc-help-contact">
+          <LinkedInIcon size={18} />
+          <div><strong>Stay ahead of deadlines.</strong> <a href={LINKEDIN_URL} target="_blank" rel="noopener noreferrer">Follow NC Compliance on LinkedIn</a> for NCDMB deadline reminders and reporting tips.</div>
+        </div>
       </main>
       <LegalFooter />
     </div>
