@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Link, Navigate, useNavigate, useSearchParams } from "react-router-dom";
 import { Loader2, MailCheck } from "lucide-react";
-import { supabase } from "../lib/supabase";
+import { supabase, authLinkError } from "../lib/supabase";
 import { useAuth } from "../auth/AuthProvider";
 import { Brand, Field, inputStyle, btnPrimary } from "../components/ui";
 import { usePageMeta } from "../lib/usePageMeta";
@@ -28,7 +28,8 @@ export default function AuthPage({ mode }) {
   const [email, setEmail] = useState(params.get("email") || "");
   const [password, setPassword] = useState("");
   const [busy, setBusy] = useState(false);
-  const [error, setError] = useState("");
+  const [error, setError] = useState(authLinkError || "");
+  const [unconfirmed, setUnconfirmed] = useState(false);
   usePageMeta(
     mode === "signup" ? "Start your free trial · NC Compliance" : mode === "forgot" ? "Reset password · NC Compliance" : "Sign in · NC Compliance",
     mode === "signup" ? "/signup" : mode === "forgot" ? "/forgot-password" : "/login",
@@ -45,6 +46,7 @@ export default function AuthPage({ mode }) {
     if (busy) return;
     setBusy(true);
     setError("");
+    setUnconfirmed(false);
     try {
       if (mode === "signin") {
         const { error: err } = await supabase.auth.signInWithPassword({ email, password });
@@ -56,7 +58,11 @@ export default function AuthPage({ mode }) {
           options: { emailRedirectTo: `${window.location.origin}${next || "/onboarding"}` },
         });
         if (err) throw err;
-        if (data.session) navigate(next || "/onboarding", { replace: true });
+        // Supabase hides whether an address is registered: for an existing
+        // account it returns a user with no identities and sends no email.
+        if (data.user && data.user.identities?.length === 0) {
+          setError("An account with this email already exists. Sign in, or reset your password if you've forgotten it.");
+        } else if (data.session) navigate(next || "/onboarding", { replace: true });
         else setSentTo(email);
       } else {
         const { error: err } = await supabase.auth.resetPasswordForEmail(email, {
@@ -66,9 +72,25 @@ export default function AuthPage({ mode }) {
         setSentTo(email);
       }
     } catch (err) {
-      setError(err.message === "Invalid login credentials" ? "That email and password don't match an account." : err.message);
+      if (err.code === "email_not_confirmed" || err.message === "Email not confirmed") {
+        setUnconfirmed(true);
+        setError("Please confirm your email first. Open the link we sent when you signed up, or get a new one below.");
+      } else {
+        setError(err.message === "Invalid login credentials" ? "That email and password don't match an account." : err.message);
+      }
     }
     setBusy(false);
+  };
+
+  const resendConfirmation = async () => {
+    setBusy(true);
+    const { error: err } = await supabase.auth.resend({
+      type: "signup", email,
+      options: { emailRedirectTo: `${window.location.origin}${next || "/onboarding"}` },
+    });
+    setBusy(false);
+    if (err) setError(err.message);
+    else { setUnconfirmed(false); setError(""); setSentTo(email); }
   };
 
   const google = async () => {
@@ -88,7 +110,7 @@ export default function AuthPage({ mode }) {
             <h1>Check your email</h1>
             <p>
               We sent a {mode === "forgot" ? "password reset" : "confirmation"} link to <strong>{sentTo}</strong>.
-              Open it on this device to continue.
+              Open it to continue. If it hasn't arrived in a few minutes, check your spam folder.
             </p>
             <Link to={`/login${keepNext}`}>Back to sign in</Link>
           </div>
@@ -116,6 +138,11 @@ export default function AuthPage({ mode }) {
                 </Field>
               )}
               {error && <div className="nc-form-error" role="alert">{error}</div>}
+              {unconfirmed && (
+                <button type="button" className="nc-btn nc-btn-ghost" onClick={resendConfirmation} disabled={busy || !email}>
+                  Resend confirmation email
+                </button>
+              )}
               <button type="submit" style={{ ...btnPrimary, justifyContent: "center" }} disabled={busy}>
                 {busy && <Loader2 size={16} className="nc-spin" />} {copy.cta}
               </button>

@@ -83,9 +83,9 @@ export function BillingView({ org, role, notify }) {
               <ul className="nc-feature-list">
                 {plan.features.map((f) => <li key={f}><CheckCircle2 size={14} /> {f}</li>)}
               </ul>
-              <button style={btnPrimary} disabled={!manager || Boolean(busy) || current} onClick={() => checkout(plan)}>
+              <button style={btnPrimary} disabled={!manager || Boolean(busy)} onClick={() => checkout(plan)}>
                 <CreditCard size={16} />
-                {current ? "Current plan" : busy === plan.id ? "Opening secure checkout…" : `Choose ${plan.name}`}
+                {busy === plan.id ? "Opening secure checkout…" : current ? `Renew ${plan.name} for another year` : `Choose ${plan.name}`}
               </button>
             </article>
           );

@@ -98,11 +98,15 @@ async function activate(tx: any) {
   if (!claimed || claimed.length === 0) return { ok: true, plan: planId, already: true };
 
   const { data: org } = await admin.from("organizations")
-    .select("name, subscription_status, current_period_end, founding_until").eq("id", orgId).single();
+    .select("name, subscription_status, current_period_end, trial_ends_at, founding_until").eq("id", orgId).single();
   const now = new Date();
   const currentEnd = org?.current_period_end ? new Date(org.current_period_end) : null;
-  // Paying early stacks the new year on top of the time already paid for.
-  const start = org?.subscription_status === "active" && currentEnd && currentEnd > now ? currentEnd : now;
+  const trialEnd = org?.trial_ends_at ? new Date(org.trial_ends_at) : null;
+  // Paying early stacks the new year on top of the time already paid for,
+  // and paying during the trial keeps the trial days that are left.
+  const start = org?.subscription_status === "active" && currentEnd && currentEnd > now ? currentEnd
+    : org?.subscription_status === "trialing" && trialEnd && trialEnd > now ? trialEnd
+    : now;
   const end = new Date(start);
   end.setFullYear(end.getFullYear() + 1);
 

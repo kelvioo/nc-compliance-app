@@ -13,6 +13,9 @@ export function useWorkspace(orgId, { onError } = {}) {
   const [loadError, setLoadError] = useState(null);
   const versionRef = useRef(null);
   const queueRef = useRef(Promise.resolve());
+  // Bumped whenever a save is rejected, so saves queued behind it (which carry
+  // the same stale document) are dropped instead of overwriting the reload.
+  const generationRef = useRef(0);
   const onErrorRef = useRef(onError);
   onErrorRef.current = onError;
 
@@ -38,11 +41,14 @@ export function useWorkspace(orgId, { onError } = {}) {
 
   const save = useCallback((next) => {
     setDataState(next);
+    const generation = generationRef.current;
     const run = queueRef.current.then(async () => {
+      if (generation !== generationRef.current) return;
       const { data: version, error } = await supabase.rpc("save_workspace", {
         p_org: orgId, p_data: next, p_expected_version: versionRef.current,
       });
       if (error) {
+        generationRef.current += 1;
         onErrorRef.current?.(friendlyError(error));
         await load();
         return;
