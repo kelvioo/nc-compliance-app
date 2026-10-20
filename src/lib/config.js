@@ -3,4 +3,8 @@ export const SUPPORT_EMAIL = import.meta.env.VITE_SUPPORT_EMAIL || "support@ncco
 
 
 // Company page linked from the site footer and help centre.
+// The registered company behind the service (CAC, Nigeria).
+export const COMPANY_LEGAL_NAME = "NC Compliance Limited";
+export const COMPANY_RC = "9951252";
+export const COMPANY_OFFICE = "1 Elechi, Port Harcourt, Rivers State, Nigeria";
 export const LINKEDIN_URL = "https://www.linkedin.com/company/nc-compliance";

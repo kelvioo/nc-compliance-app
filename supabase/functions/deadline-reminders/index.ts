@@ -97,7 +97,7 @@ function layout(title: string, bodyHtml: string, cta: { label: string; url: stri
       <p style="margin:26px 0 6px"><a href="${cta.url}" style="background:#E6A23C;color:#1A1103;text-decoration:none;padding:12px 20px;border-radius:6px;font-weight:bold;display:inline-block">${escapeHtml(cta.label)}</a></p>
     </div>
     <p style="font-size:11px;color:#8a939c;margin:16px 0 0"><a href="https://www.linkedin.com/company/nc-compliance" style="color:#0A66C2;text-decoration:none;font-weight:bold">Follow NC Compliance on LinkedIn</a> for NCDMB deadline reminders and tips.</p>
-    <p style="font-size:11px;color:#8a939c;margin-top:8px">You're receiving this because you're an owner, admin or approver of this company on NC Compliance. Deadlines follow NCDMB's published reporting schedule; always confirm against current NCDMB guidance.</p>
+    <p style="font-size:11px;color:#8a939c;margin-top:8px">You're receiving this because you're an owner, admin or approver of this company on NC Compliance. Deadlines follow NCDMB's published reporting schedule; always confirm against current NCDMB guidance.<br>NC Compliance Limited (RC 9951252), Port Harcourt, Nigeria. Independent software, not affiliated with NCDMB.</p>
   </div></body></html>`;
 }
 

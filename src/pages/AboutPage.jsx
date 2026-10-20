@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { ArrowRight, MapPin, ShieldCheck, Target, Users } from "lucide-react";
-import { LINKEDIN_URL, SUPPORT_EMAIL } from "../lib/config";
+import { COMPANY_LEGAL_NAME, COMPANY_RC, LINKEDIN_URL, SUPPORT_EMAIL } from "../lib/config";
 import { usePageMeta } from "../lib/usePageMeta";
 import { PublicPage } from "./PublicPage";
 import { LinkedInIcon } from "./LegalPage";
@@ -72,6 +72,7 @@ export default function AboutPage() {
 
       <section className="nc-public-section nc-facts">
         <div><MapPin size={16} /> <span>Based in <strong>Port Harcourt, Rivers State, Nigeria</strong></span></div>
+        <div><ShieldCheck size={16} /> <span>{COMPANY_LEGAL_NAME}, registered with the CAC (RC {COMPANY_RC})</span></div>
         {SUPPORT_EMAIL && <div><span>Email</span> <a href={`mailto:${SUPPORT_EMAIL}`}>{SUPPORT_EMAIL}</a></div>}
         <div><LinkedInIcon size={15} /> <a href={LINKEDIN_URL} target="_blank" rel="noopener noreferrer">NC Compliance on LinkedIn</a></div>
       </section>

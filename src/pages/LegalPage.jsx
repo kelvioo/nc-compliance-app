@@ -1,11 +1,11 @@
 import { useEffect } from "react";
 import { Link } from "react-router-dom";
 import { Brand } from "../components/ui";
-import { LINKEDIN_URL, SUPPORT_EMAIL } from "../lib/config";
+import { COMPANY_LEGAL_NAME, COMPANY_OFFICE, COMPANY_RC, LINKEDIN_URL, SUPPORT_EMAIL } from "../lib/config";
 import { TRIAL_DAYS } from "../lib/plans";
 import { usePageMeta } from "../lib/usePageMeta";
 
-const UPDATED = "15 October 2026";
+const UPDATED = "20 October 2026";
 const SITE = "nccompliance.com.ng";
 
 function Contact() {
@@ -20,7 +20,7 @@ function Privacy() {
       <h1>Privacy policy</h1>
       <p className="nc-legal-meta">Last updated {UPDATED}</p>
       <p>
-        This policy explains how NC Compliance ("we", "us") collects and uses personal data when you use {SITE} and
+        This policy explains how <strong>{COMPANY_LEGAL_NAME}</strong> (RC {COMPANY_RC}), a company registered in Nigeria with its registered office at {COMPANY_OFFICE} ("NC Compliance", "we", "us") collects and uses personal data when you use {SITE} and
         the NC Compliance app. We follow the Nigeria Data Protection Act 2023 (NDPA) and the rules of the Nigeria Data
         Protection Commission (NDPC).
       </p>
@@ -136,7 +136,7 @@ function Terms() {
       <h1>Terms of service</h1>
       <p className="nc-legal-meta">Last updated {UPDATED}</p>
       <p>
-        These terms are an agreement between NC Compliance ("we", "us") and the organisation that creates a workspace
+        These terms are an agreement between <strong>{COMPANY_LEGAL_NAME}</strong> (RC {COMPANY_RC}), a company registered in Nigeria with its registered office at {COMPANY_OFFICE} ("NC Compliance", "we", "us") and the organisation that creates a workspace
         ("you", "your company"). By creating an account or using the service, you accept these terms on behalf of your
         company and confirm that you are authorised to do so.
       </p>
@@ -281,7 +281,7 @@ export function LegalFooter() {
         <a href={LINKEDIN_URL} target="_blank" rel="noopener noreferrer" className="nc-footer-linkedin" aria-label="NC Compliance on LinkedIn">
           <LinkedInIcon /> LinkedIn
         </a>
-        <span>© {new Date().getFullYear()} NC Compliance</span>
+        <span>© {new Date().getFullYear()} {COMPANY_LEGAL_NAME} · RC {COMPANY_RC}</span>
       </span>
     </footer>
   );
