@@ -9,7 +9,7 @@ import { useFoundingOfferOpen } from "../lib/founding";
 import { PriceTag } from "../components/PriceTag";
 import { STATUTORY_REPORTS, getQuarterOptions, nextQuarterly30DayDeadline, daysUntil } from "../lib/compliance";
 import { Brand } from "../components/ui";
-import { SUPPORT_EMAIL } from "../lib/config";
+import { PROMO_VIDEO_ID, SUPPORT_EMAIL } from "../lib/config";
 import { LegalFooter } from "./LegalPage";
 
 const FEATURES = [
@@ -67,6 +67,31 @@ const FAQ = [
   { q: "What happens when the trial ends?", a: "Your workspace becomes read-only until you choose a plan. Nothing is deleted, and you can still view and download everything." },
   { q: "Can you help us get started or move our spreadsheets in?", a: "Yes. Send us a message from the contact page and we'll help you set up your workspace and bring your existing records across. Enterprise plans include guided onboarding." },
 ];
+
+// Loads the YouTube player only when clicked, so the home page stays fast.
+function PromoVideo() {
+  const [playing, setPlaying] = useState(false);
+  return (
+    <figure className="nc-promo-video">
+      <div className="nc-promo-frame">
+        {playing ? (
+          <iframe
+            src={`https://www.youtube-nocookie.com/embed/${PROMO_VIDEO_ID}?autoplay=1&rel=0`}
+            title="NC Compliance: from the field to the office"
+            allow="autoplay; encrypted-media; picture-in-picture"
+            allowFullScreen
+          />
+        ) : (
+          <button type="button" className="nc-promo-poster" onClick={() => setPlaying(true)} aria-label="Play the NC Compliance video">
+            <img src="/promo-poster.jpg" alt="" loading="lazy" />
+            <span className="nc-promo-play" aria-hidden="true"><svg viewBox="0 0 24 24" width="30" height="30"><path d="M8 5v14l11-7z" fill="currentColor" /></svg></span>
+          </button>
+        )}
+      </div>
+      <figcaption>See it in action: your site team logs spend on the phone, and the office approves and downloads the NCDMB pack. (55 seconds)</figcaption>
+    </figure>
+  );
+}
 
 export default function Landing() {
   const { user } = useAuth();
@@ -173,6 +198,7 @@ export default function Landing() {
             </article>
           ))}
         </div>
+        <PromoVideo />
       </section>
 
       <section id="reports" className="nc-section">

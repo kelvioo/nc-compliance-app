@@ -2,11 +2,11 @@ import { useState } from "react";
 import { Link } from "react-router-dom";
 import { CheckCircle2, Clock, Mail, MapPin, Send } from "lucide-react";
 import { supabase } from "../lib/supabase";
-import { LINKEDIN_URL, SUPPORT_EMAIL } from "../lib/config";
+import { LINKEDIN_URL, SUPPORT_EMAIL, YOUTUBE_URL } from "../lib/config";
 import { usePageMeta } from "../lib/usePageMeta";
 import { Field, inputStyle, btnPrimary } from "../components/ui";
 import { PublicPage } from "./PublicPage";
-import { LinkedInIcon } from "./LegalPage";
+import { LinkedInIcon, YouTubeIcon } from "./LegalPage";
 
 const TOPICS = [
   ["demo", "Book a walkthrough"],
@@ -47,6 +47,7 @@ export default function ContactPage() {
           <div><MapPin size={18} /><div><strong>Location</strong><span>Port Harcourt, Rivers State, Nigeria</span></div></div>
           <div><Clock size={18} /><div><strong>Hours</strong><span>Monday to Friday, 8am to 6pm (WAT)</span></div></div>
           <div><LinkedInIcon size={18} /><div><strong>LinkedIn</strong><a href={LINKEDIN_URL} target="_blank" rel="noopener noreferrer">NC Compliance</a></div></div>
+          <div><YouTubeIcon size={18} /><div><strong>YouTube</strong><a href={YOUTUBE_URL} target="_blank" rel="noopener noreferrer">@nccompliance</a></div></div>
           <p className="nc-public-note">Want to see the product first? Open the <Link to="/demo">live demo</Link>, or check which reports you owe with the free <Link to="/check">compliance check</Link>.</p>
         </div>
 
