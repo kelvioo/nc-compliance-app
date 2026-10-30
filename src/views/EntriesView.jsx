@@ -1,12 +1,14 @@
 import { useState } from "react";
 import { useAuth } from "../auth/AuthProvider";
-import { Plus, Trash2 } from "lucide-react";
-import { Field, inputStyle, btnPrimary } from "../components/ui";
+import { FileSpreadsheet, Plus, Trash2 } from "lucide-react";
+import { Field, inputStyle, btnPrimary, btnGhost } from "../components/ui";
 import { CATS, fmtNaira } from "../lib/compliance";
+import { ImportEntries } from "./ImportEntries";
 
-export function EntriesView({ data, setData }) {
+export function EntriesView({ data, setData, editable = true }) {
   const { user } = useAuth();
   const rate = data.exchangeRate || 1600;
+  const [importing, setImporting] = useState(false);
   const [form, setForm] = useState({
     date: new Date().toISOString().slice(0, 10), category: CATS[0].id,
     vendor: "", amount: "", note: "", project: "", addedBy: user?.email || "", currency: "NGN",
@@ -31,8 +33,19 @@ export function EntriesView({ data, setData }) {
 
   return (
     <div style={{ padding: 28, fontFamily: "IBM Plex Sans, sans-serif" }} className="nc-main-content">
-      <h1 style={{ fontFamily: "Oswald, sans-serif", textTransform: "uppercase", letterSpacing: 1,
-        fontSize: 20, color: "#EDEFF2", margin: "0 0 20px" }}>Spend log</h1>
+      <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap", margin: "0 0 20px" }}>
+        <h1 style={{ fontFamily: "Oswald, sans-serif", textTransform: "uppercase", letterSpacing: 1,
+          fontSize: 20, color: "#EDEFF2", margin: 0, flex: 1 }}>Spend log</h1>
+        {editable && !importing && (
+          <button type="button" style={btnGhost} onClick={() => setImporting(true)}>
+            <FileSpreadsheet size={15} /> Import from Excel
+          </button>
+        )}
+      </div>
+
+      {importing && (
+        <ImportEntries data={data} setData={setData} addedBy={user?.email || ""} onClose={() => setImporting(false)} />
+      )}
 
       <form onSubmit={addEntry} className="nc-form-grid" style={{
         display: "grid", gridTemplateColumns: "120px 1fr 1fr", gap: 10,
@@ -100,7 +113,7 @@ export function EntriesView({ data, setData }) {
           <tbody>
             {data.entries.length === 0 && (
               <tr><td colSpan={8} style={{ padding: 20, color: "#5B6470", textAlign: "center" }}>
-                No entries yet. Log your first spend item above.
+                No entries yet. Log your first spend item above, or import your spreadsheet with “Import from Excel”.
               </td></tr>
             )}
             {data.entries.map((e) => {

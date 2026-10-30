@@ -130,7 +130,7 @@ export default function WorkspaceApp() {
           {reportById(view) && (
             <ReportHeader reportId={view} role={role} submissions={submissions} editable={editable} notify={notify} />
           )}
-          {REPORT_VIEWS[view]({ data, setData: guardedSetData })}
+          {REPORT_VIEWS[view]({ data, setData: guardedSetData, editable })}
         </>
       );
     }

@@ -503,3 +503,16 @@ body { font-family: "IBM Plex Sans", sans-serif; color: var(--nc-text); }
 .nc-promo-poster:hover .nc-promo-play, .nc-promo-poster:focus-visible .nc-promo-play { transform:translate(-50%,-50%) scale(1.08); }
 .nc-promo-video figcaption { margin-top:12px; text-align:center; color:var(--nc-muted); font-size:14px; }
 .nc-footer-youtube { display:inline-flex; align-items:center; gap:6px; } .nc-footer-youtube:hover { color:#FF0033 !important; }
+
+/* Home page deadline countdown and demo buttons */
+.nc-countdown { display:flex; align-items:center; justify-content:center; gap:10px; flex-wrap:wrap; padding:9px 16px; background:linear-gradient(90deg, rgba(230,162,60,.16), rgba(79,174,126,.10)); border-bottom:1px solid rgba(230,162,60,.3); color:var(--nc-text); font-size:13.5px; text-align:center; text-decoration:none; }
+.nc-countdown svg { color:var(--nc-amber); flex:none; }
+.nc-countdown strong { color:var(--nc-amber); font-weight:600; }
+.nc-countdown em { font-style:normal; white-space:nowrap; font-family:"IBM Plex Mono",monospace; color:#7FD3A6; }
+.nc-countdown-link { display:inline-flex; align-items:center; gap:4px; color:var(--nc-muted); }
+.nc-countdown:hover .nc-countdown-link { color:var(--nc-amber); }
+.nc-final-cta-buttons { display:flex; gap:12px; justify-content:center; flex-wrap:wrap; }
+@media (max-width: 560px) {
+  .nc-countdown { font-size:12.5px; gap:6px; padding:8px 12px; }
+  .nc-countdown-link, .nc-countdown svg { display:none; }
+}

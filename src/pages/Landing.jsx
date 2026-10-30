@@ -102,6 +102,16 @@ export default function Landing() {
 
   return (
     <div className="nc-landing">
+      {nextQuarter && (
+        <Link to="/ncdmb-deadlines" className="nc-countdown">
+          <CalendarClock size={15} aria-hidden="true" />
+          <span>
+            {nextQuarter.quarterLabel} NCDMB reports are due <strong>{nextQuarter.deadlineLabel}</strong>
+            {" · "}<em>{days === 0 ? "due today" : `${days} ${days === 1 ? "day" : "days"} left`}</em>
+          </span>
+          <span className="nc-countdown-link">See every deadline <ArrowRight size={14} aria-hidden="true" /></span>
+        </Link>
+      )}
       <header className="nc-landing-nav">
         <Brand />
         <nav>
@@ -111,6 +121,7 @@ export default function Landing() {
           <Link to="/demo">Live demo</Link>
           <Link to="/check">Free check</Link>
           <Link to="/about">About</Link>
+          <Link to="/contact?topic=demo">Book a demo</Link>
         </nav>
         <div className="nc-landing-nav-cta">
           {user ? (
@@ -136,7 +147,7 @@ export default function Landing() {
             <Link to="/signup" className="nc-btn nc-btn-primary nc-btn-lg">Start your {TRIAL_DAYS}-day free trial <ArrowRight size={18} /></Link>
             <Link to="/demo" className="nc-btn nc-btn-ghost nc-btn-lg">See a live demo</Link>
           </div>
-          <p className="nc-hero-note">No card required · Set up in two minutes · <Link to="/demo">Try the demo without signing up</Link></p>
+          <p className="nc-hero-note">No card required · Set up in two minutes · Prefer a guided tour? <Link to="/contact?topic=demo">Book a 15-minute demo</Link></p>
         </div>
 
         <div className="nc-hero-preview" aria-hidden="true">
@@ -249,7 +260,10 @@ export default function Landing() {
       <section className="nc-final-cta">
         <h2>Your next NCDMB deadline is {days >= 0 ? `${days} days away` : "here"}.</h2>
         <p>Get your team set up before it arrives.</p>
-        <Link to="/signup" className="nc-btn nc-btn-primary nc-btn-lg">Start free trial <ArrowRight size={18} /></Link>
+        <div className="nc-final-cta-buttons">
+          <Link to="/signup" className="nc-btn nc-btn-primary nc-btn-lg">Start free trial <ArrowRight size={18} /></Link>
+          <Link to="/contact?topic=demo" className="nc-btn nc-btn-ghost nc-btn-lg">Book a 15-minute demo</Link>
+        </div>
       </section>
 
       <LegalFooter />

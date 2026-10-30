@@ -96,6 +96,7 @@ export default function DemoApp() {
       <div className="nc-demo-bar no-print">
         <Sparkles size={15} />
         <span><strong>Live demo</strong> with a sample company. Click around, add entries, download reports. Nothing is saved.</span>
+        <Link to="/contact?topic=demo" className="nc-btn nc-btn-ghost">Book a 15-minute demo</Link>
         <Link to="/signup" className="nc-btn nc-btn-primary">Start free trial</Link>
       </div>
       <div className="nc-layout nc-layout-demo">

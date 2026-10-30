@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import { CheckCircle2, Clock, Mail, MapPin, Send } from "lucide-react";
 import { supabase } from "../lib/supabase";
 import { LINKEDIN_URL, SUPPORT_EMAIL, YOUTUBE_URL } from "../lib/config";
@@ -19,7 +19,9 @@ const TOPICS = [
 
 export default function ContactPage() {
   usePageMeta("Contact us · NC Compliance", "/contact");
-  const [form, setForm] = useState({ name: "", company: "", email: "", phone: "", topic: "demo", message: "" });
+  const [params] = useSearchParams();
+  const initialTopic = TOPICS.some(([id]) => id === params.get("topic")) ? params.get("topic") : "demo";
+  const [form, setForm] = useState({ name: "", company: "", email: "", phone: "", topic: initialTopic, message: "" });
   const [status, setStatus] = useState("idle");
   const set = (k) => (e) => setForm({ ...form, [k]: e.target.value });
 
