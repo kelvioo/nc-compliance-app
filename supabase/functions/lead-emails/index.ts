@@ -207,7 +207,7 @@ function reminderEmail(sub: Subscriber, d: { title: string; due: number; reports
     <p style="line-height:1.6">The <strong>${esc(d.title)}</strong> ${d.reports.length > 1 ? "are" : "is"} due on <strong>${pretty(new Date(d.due).toISOString())}</strong>, ${days} days from today:</p>
     ${reportList(d.reports)}
     <p style="line-height:1.6">${days > 7 ? "Now is a good time to collect contracts, purchase orders and vessel data from procurement and operations." : "If anything is still waiting for review or sign-off, now is the time to chase it."}</p>
-    <p style="line-height:1.6">NC Compliance prepares these reports in NCDMB's layout and puts the cover letter and every report in one PDF. Already keep your spend in Excel? Upload the sheet and the reports are ready in minutes. Free for 30 days, no card needed.</p>`,
+    <p style="line-height:1.6">NC Compliance prepares these reports in NCDMB's layout and puts the cover letter and every report in one PDF. Already keep your spend in Excel? Upload the sheet and your Nigerian Content figures are ready in minutes. Free for 30 days, no card needed.</p>`,
     { label: "Start my free 30-day trial", url: `${APP_URL}/signup?email=${encodeURIComponent(sub.email)}` });
 }
 
