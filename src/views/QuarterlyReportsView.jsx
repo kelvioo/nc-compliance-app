@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Plus, FileText, Trash2, ClipboardList, Ship, CalendarClock } from "lucide-react";
 import { Field, inputStyle, btnPrimary, NCDMBDocShell, DeadlineBadge } from "../components/ui";
-import { CONTRACT_CATEGORIES, CONTRACT_NATURE, CONTRACT_STATUSES, JOB_FORECAST_THRESHOLD_USD, getQuarterOptions, STATUTORY_REPORTS, nextQuarterly30DayDeadline, nextAnnual60DayDeadline, daysUntil, FREQ_LABELS } from "../lib/compliance";
+import { CONTRACT_CATEGORIES, CONTRACT_NATURE, CONTRACT_STATUSES, JOB_FORECAST_THRESHOLD_USD, getQuarterOptions, upcomingQuarter, STATUTORY_REPORTS, nextQuarterly30DayDeadline, nextAnnual60DayDeadline, daysUntil, FREQ_LABELS } from "../lib/compliance";
 import { NCPlanTab } from "./NCPlanView";
 import { QuarterlyDocTable, quarterlyReportDefs } from "../lib/quarterlyDocs";
 
@@ -59,7 +59,7 @@ export function QuarterlyReportsView({ data, setData, lockTab }) {
   const [regAddress, setRegAddress] = useState(data.registeredAddress || "");
   const [form, setForm] = useState({
     description: "", contractor: "", category: CONTRACT_CATEGORIES[0], nature: CONTRACT_NATURE[0],
-    estimatedValueUsd: "", status: CONTRACT_STATUSES[0], quarter: getQuarterOptions()[0].id,
+    estimatedValueUsd: "", status: CONTRACT_STATUSES[0], quarter: upcomingQuarter().id,
     tenderNumber: "", ittIssuance: "", ittClosure: "", awardDate: "", remarks: "",
     origin: "Nigerian", ncecNumber: "", nogicJqsId: "", serviceType: "", equipmentDeployed: "",
     partneringVendor: "", materialType: "", quantity: "", unitsOfMeasurement: "",
@@ -71,9 +71,9 @@ export function QuarterlyReportsView({ data, setData, lockTab }) {
     vesselName: "", vesselType: "", imoNo: "", nimasaVesselCert: "", flagging: "",
     projectName: "", typeOfService: "", projectLocation: "", contractStart: "", contractEnd: "",
     spendIncountry: "", spendOutcountry: "", nigerianPob: "", expatriatePob: "",
-    quarter: getQuarterOptions()[0].id,
+    quarter: upcomingQuarter().id,
   });
-  const [reportQuarter, setReportQuarter] = useState(getQuarterOptions()[0].id);
+  const [reportQuarter, setReportQuarter] = useState(upcomingQuarter().id);
   const [reportType, setReportType] = useState(lockTab || "forecast");
 
   const addContract = async (e) => {

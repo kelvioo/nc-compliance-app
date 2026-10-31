@@ -22,6 +22,14 @@ function whiteCopy(el) {
   copy.querySelectorAll(".no-print").forEach((n) => n.remove());
   holder.appendChild(copy);
   document.body.appendChild(holder);
+  // Wide tables (the 12-column procurement templates) don't fit 800px; widen
+  // the page to fit them so no column is cut off. The PDF scales it to A4.
+  [copy, ...copy.querySelectorAll("[style*='max-width']")].forEach((n) => { n.style.maxWidth = "none"; });
+  for (let i = 0; i < 6; i++) {
+    const overflow = Math.max(0, ...[copy, ...copy.querySelectorAll("div")].map((n) => n.scrollWidth - n.clientWidth));
+    if (overflow <= 1) break;
+    holder.style.width = `${holder.offsetWidth + overflow}px`;
+  }
   // Dark on-screen panels become white; light fills (table headers) stay.
   [copy, ...copy.querySelectorAll("*")].forEach((n) => {
     const m = getComputedStyle(n).backgroundColor.match(/[\d.]+/g);

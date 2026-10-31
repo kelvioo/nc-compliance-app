@@ -8,6 +8,10 @@
 //   POST { contact_id } from the contact_messages insert trigger: email the
 //                      enquiry to the product owner (reply-to the sender)
 //                      and send the sender an acknowledgement.
+//   POST { subscriber_id } from the deadline_subscribers insert trigger: send
+//                      the welcome email for free deadline reminders. The
+//                      daily sweep then sends a reminder 14 and 3 days before
+//                      each NCDMB deadline.
 //
 // POSTs must carry the cron secret from Vault (x-cron-secret). Deployed with
 // verify_jwt = false. Secrets: RESEND_API_KEY, EMAIL_FROM, APP_URL, ADMIN_EMAIL.
@@ -119,6 +123,7 @@ const COLS = "id, name, company, email, score, created_at, result, results_sent_
 
 async function sweep() {
   const log: string[] = [];
+  await remindSubscribers(log).catch((e) => console.error("deadline reminders", e));
   const since = new Date(Date.now() - 14 * DAY).toISOString();
   const { data: leads } = await admin.from("leads").select(COLS).gte("created_at", since).is("unsubscribed_at", null);
   if (!leads?.length) return log;
@@ -138,6 +143,114 @@ async function sweep() {
     }
   }
   return log;
+}
+
+
+// ---- Free NCDMB deadline reminders (deadlines page sign-up) ----
+
+type Subscriber = { id: string; email: string; company: string | null; reminders_sent: string[]; unsubscribe_token: string };
+const REMINDER_DAYS = [14, 3];
+const QUARTERLY = ["Job Forecast Report (§18)", "Procurement Report — Materials (§24)", "Procurement Report — Services (§24)", "Marine Services Utilization Report (§24)"];
+
+// Today's date in Lagos, as midnight UTC, so day counts match the calendar.
+function lagosToday() {
+  const d = new Date(Date.now() + 3600000);
+  return Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate());
+}
+
+// Same rules as the website: quarterly reports are due 30 days before the
+// quarter starts; the §60 report 60 days into the year.
+function ncdmbDeadlines(today: number) {
+  const y = new Date(today).getUTCFullYear();
+  const list: { key: string; due: number; title: string; reports: string[] }[] = [];
+  for (const year of [y, y + 1, y + 2]) {
+    for (let q = 0; q < 4; q++) {
+      list.push({ key: `${year}-Q${q + 1}`, due: Date.UTC(year, q * 3, 1) - 30 * DAY, title: `Q${q + 1} ${year} quarterly reports`, reports: QUARTERLY });
+    }
+    list.push({ key: `${year}-S60`, due: Date.UTC(year, 0, 1) + 60 * DAY, title: `NC Performance Report for ${year - 1}`, reports: ["NC Performance Report (§60)"] });
+  }
+  return list.filter((d) => d.due >= today).sort((a, b) => a.due - b.due);
+}
+
+function subscriberShell(sub: Subscriber, title: string, body: string, cta: { label: string; url: string }) {
+  const unsub = `${SELF_URL}?unsubscribe=${sub.unsubscribe_token}`;
+  return `<!doctype html><html><body style="margin:0;background:#f4f5f7;font-family:Arial,Helvetica,sans-serif;color:#1d2329">
+  <div style="max-width:580px;margin:0 auto;padding:32px 16px">
+    <div style="margin-bottom:16px"><img src="${APP_URL}/email-logo.png" width="190" height="39" alt="NC Compliance" style="display:block;border:0"></div>
+    <div style="background:#fff;border-radius:10px;padding:28px;border:1px solid #e3e6ea">
+      <h1 style="font-size:20px;margin:0 0 14px">${esc(title)}</h1>
+      ${body}
+      <p style="margin:26px 0 6px"><a href="${cta.url}" style="background:#E6A23C;color:#1A1103;text-decoration:none;padding:12px 20px;border-radius:6px;font-weight:bold;display:inline-block">${esc(cta.label)}</a></p>
+    </div>
+    <p style="font-size:11px;color:#8a939c;margin-top:16px;line-height:1.6">You're receiving this because you asked for NCDMB deadline reminders at nccompliance.com.ng. Always confirm dates against current NCDMB guidance.
+    <a href="${unsub}" style="color:#8a939c">Unsubscribe</a> · NC Compliance Limited (RC 9951252), Port Harcourt, Nigeria. Independent software, not affiliated with NCDMB.</p>
+  </div></body></html>`;
+}
+
+const reportList = (reports: string[]) =>
+  `<ul style="line-height:1.7;padding-left:18px;margin:8px 0">${reports.map((r) => `<li>${esc(r)}</li>`).join("")}</ul>`;
+
+function welcomeEmail(sub: Subscriber, today: number) {
+  const next = ncdmbDeadlines(today).slice(0, 3);
+  const rows = next.map((d) => `<tr><td style="padding:8px 10px;border-top:1px solid #eee"><strong>${esc(d.title)}</strong></td>
+    <td style="padding:8px 10px;border-top:1px solid #eee;white-space:nowrap">${pretty(new Date(d.due).toISOString())}<br><span style="color:#6b7580;font-size:12px">${Math.round((d.due - today) / DAY)} days</span></td></tr>`).join("");
+  return subscriberShell(sub, "You're on the NCDMB deadline reminder list", `
+    <p style="line-height:1.6">We'll email you <strong>14 days</strong> and <strong>3 days</strong> before every quarterly and annual NCDMB reporting deadline. Here are the next ones:</p>
+    <table style="width:100%;border-collapse:collapse;font-size:14px">${rows}</table>
+    <p style="line-height:1.6;margin-top:18px">See every deadline, or add them all to your calendar: <a href="${APP_URL}/ncdmb-deadlines" style="color:#b97a1c">nccompliance.com.ng/ncdmb-deadlines</a></p>
+    <p style="line-height:1.6">When it's time to prepare the reports, NC Compliance produces each one in NCDMB's layout from data your team records once, with sign-off and a one-click submission pack. You can look around the live demo without signing up.</p>`,
+    { label: "Open the live demo", url: `${APP_URL}/demo` });
+}
+
+function reminderEmail(sub: Subscriber, d: { title: string; due: number; reports: string[] }, days: number) {
+  return subscriberShell(sub, `${days} days to the NCDMB deadline: ${d.title}`, `
+    <p style="line-height:1.6">The <strong>${esc(d.title)}</strong> ${d.reports.length > 1 ? "are" : "is"} due on <strong>${pretty(new Date(d.due).toISOString())}</strong>, ${days} days from today:</p>
+    ${reportList(d.reports)}
+    <p style="line-height:1.6">${days > 7 ? "Now is a good time to collect contracts, purchase orders and vessel data from procurement and operations." : "If anything is still waiting for review or sign-off, now is the time to chase it."}</p>
+    <p style="line-height:1.6">NC Compliance prepares these reports in NCDMB's layout and puts the cover letter and every report in one PDF. Already keep your spend in Excel? Upload the sheet and the reports are ready in minutes. Free for 30 days, no card needed.</p>`,
+    { label: "Start my free 30-day trial", url: `${APP_URL}/signup?email=${encodeURIComponent(sub.email)}` });
+}
+
+async function welcome(id: string) {
+  const { data } = await admin.from("deadline_subscribers").update({ welcome_sent_at: new Date().toISOString() })
+    .eq("id", id).is("welcome_sent_at", null).is("unsubscribed_at", null).select("id, email, company, reminders_sent, unsubscribe_token");
+  const sub = data?.[0] as Subscriber | undefined;
+  if (!sub) return false;
+  const ok = await send(sub.email, "You're on the NCDMB deadline reminder list", welcomeEmail(sub, lagosToday()));
+  if (!ok) await admin.from("deadline_subscribers").update({ welcome_sent_at: null }).eq("id", id);
+  return ok;
+}
+
+// Records the reminder before sending so a retry or a second run can't send
+// it twice; the reminder key is "<deadline>:<days>".
+async function remindSubscribers(log: string[]) {
+  const today = lagosToday();
+  const due = ncdmbDeadlines(today).flatMap((d) =>
+    REMINDER_DAYS.filter((n) => Math.round((d.due - today) / DAY) === n).map((n) => ({ ...d, days: n })));
+  if (!due.length) return;
+  const { data: subs } = await admin.from("deadline_subscribers")
+    .select("id, email, company, reminders_sent, unsubscribe_token").is("unsubscribed_at", null).not("welcome_sent_at", "is", null);
+  if (!subs?.length) return;
+  const { data: users } = await admin.auth.admin.listUsers({ perPage: 1000 });
+  const signedUp = new Set((users?.users ?? []).map((u) => (u.email ?? "").toLowerCase()));
+  for (const sub of subs as Subscriber[]) {
+    // Customers already get reminders from their workspace.
+    if (signedUp.has(sub.email.toLowerCase())) continue;
+    for (const d of due) {
+      const key = `${d.key}:${d.days}`;
+      if (sub.reminders_sent.includes(key)) continue;
+      const sent = [...sub.reminders_sent, key];
+      const { data: claimed } = await admin.from("deadline_subscribers").update({ reminders_sent: sent })
+        .eq("id", sub.id).not("reminders_sent", "cs", `{${key}}`).select("id");
+      if (!claimed?.length) continue;
+      if (await send(sub.email, `${d.days} days to the NCDMB deadline: ${d.title}`, reminderEmail(sub, d, d.days))) {
+        sub.reminders_sent = sent;
+        log.push(`deadline ${key}: ${sub.email}`);
+      } else {
+        await admin.from("deadline_subscribers").update({ reminders_sent: sub.reminders_sent }).eq("id", sub.id);
+      }
+    }
+  }
 }
 
 const TOPICS: Record<string, string> = {
@@ -185,7 +298,11 @@ Deno.serve(async (req) => {
   if (req.method === "GET") {
     const token = url.searchParams.get("unsubscribe") ?? "";
     if (!/^[0-9a-f-]{36}$/i.test(token)) return page("This link isn't valid.");
-    await admin.from("leads").update({ unsubscribed_at: new Date().toISOString() }).eq("unsubscribe_token", token).is("unsubscribed_at", null);
+    const now = new Date().toISOString();
+    const { data: sub } = await admin.from("deadline_subscribers").update({ unsubscribed_at: now })
+      .eq("unsubscribe_token", token).select("id");
+    if (sub?.length) return page("You're unsubscribed. We won't send you any more NCDMB deadline reminders.");
+    await admin.from("leads").update({ unsubscribed_at: now }).eq("unsubscribe_token", token).is("unsubscribed_at", null);
     return page("You're unsubscribed. We won't send you any more emails about your compliance check.");
   }
 
@@ -195,6 +312,7 @@ Deno.serve(async (req) => {
 
   if (body.sweep) return Response.json({ sent: await sweep() });
   if (body.contact_id) return Response.json({ sent: await contact(String(body.contact_id)) });
+  if (body.subscriber_id) return Response.json({ sent: await welcome(String(body.subscriber_id)) });
 
   if (body.lead_id) {
     const { data: lead } = await admin.from("leads").select(COLS).eq("id", String(body.lead_id)).maybeSingle();

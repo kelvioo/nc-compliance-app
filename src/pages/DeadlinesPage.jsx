@@ -1,26 +1,44 @@
+import { useState } from "react";
 import { Link } from "react-router-dom";
-import { ArrowRight, BellRing } from "lucide-react";
+import { ArrowRight, BellRing, CalendarPlus, CheckCircle2, FileDown, Mail } from "lucide-react";
 import { daysUntil } from "../lib/compliance";
+import { deadlinesFor, downloadDeadlinesIcs } from "../lib/deadlines";
+import { supabase } from "../lib/supabase";
 import { usePageMeta } from "../lib/usePageMeta";
 import { DeadlineBadge } from "../components/ui";
 import { PublicPage } from "./PublicPage";
 
-const QUARTERLY = ["Job Forecast Report (§18)", "Procurement Report — Materials (§24)", "Procurement Report — Services (§24)", "Marine Services Utilization Report (§24)"];
-const MONTH = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 const longDate = (d) => d.toLocaleDateString("en-GB", { weekday: "short", day: "numeric", month: "long", year: "numeric" });
 
-// The same rules the app and reminder emails use: quarterly reports are due
-// 30 days before the quarter starts; the §60 report 60 days into the year.
-function deadlinesFor(year) {
-  const rows = [];
-  for (let q = 0; q < 4; q++) {
-    const start = new Date(year, q * 3, 1);
-    const due = new Date(start); due.setDate(due.getDate() - 30);
-    rows.push({ key: `${year}-Q${q + 1}`, due, period: `Q${q + 1} ${year} (${MONTH[q * 3]}–${MONTH[q * 3 + 2]} ${year})`, reports: QUARTERLY });
+// "Email me before each deadline": free reminders 14 and 3 days before.
+function ReminderSignup() {
+  const [email, setEmail] = useState("");
+  const [company, setCompany] = useState("");
+  const [status, setStatus] = useState("idle");
+  const submit = async (e) => {
+    e.preventDefault();
+    setStatus("sending");
+    const { error } = await supabase.rpc("subscribe_deadlines", { p_email: email, p_company: company });
+    setStatus(error ? "error" : "done");
+  };
+  if (status === "done") {
+    return (
+      <p className="nc-remind-done" role="status">
+        <CheckCircle2 size={18} /> You're on the list. We've sent a confirmation to <strong>{email}</strong>, and we'll email you 14 and 3 days before every deadline.
+      </p>
+    );
   }
-  const annual = new Date(year, 0, 1); annual.setDate(annual.getDate() + 60);
-  rows.push({ key: `${year}-S60`, due: annual, period: `Year ${year - 1}`, reports: ["NC Performance Report (§60)"] });
-  return rows.sort((a, b) => a.due - b.due);
+  return (
+    <form className="nc-remind-form" onSubmit={submit}>
+      <input type="email" required placeholder="Work email" value={email} onChange={(e) => setEmail(e.target.value)} aria-label="Work email" maxLength={200} />
+      <input placeholder="Company (optional)" value={company} onChange={(e) => setCompany(e.target.value)} aria-label="Company" maxLength={160} />
+      <button type="submit" className="nc-btn nc-btn-primary" disabled={status === "sending"}>
+        <Mail size={16} /> {status === "sending" ? "Signing you up…" : "Email me reminders"}
+      </button>
+      {status === "error" && <p className="nc-remind-error" role="alert">That didn't work. Check the email address and try again.</p>}
+      <p className="nc-remind-note">Free. One email 14 days and one 3 days before each deadline. Unsubscribe with one click. See our <Link to="/privacy">privacy policy</Link>.</p>
+    </form>
+  );
 }
 
 export default function DeadlinesPage() {
@@ -54,6 +72,19 @@ export default function DeadlinesPage() {
         </section>
       )}
 
+      <section className="nc-public-section nc-remind">
+        <div className="nc-remind-card">
+          <h2><Mail size={18} /> Email me before each deadline</h2>
+          <ReminderSignup />
+        </div>
+        <div className="nc-remind-card">
+          <h2><CalendarPlus size={18} /> Add them to my calendar</h2>
+          <p>One file with every upcoming deadline and reminders 14 and 3 days before. Works with Google Calendar, Outlook and iPhone.</p>
+          <button type="button" className="nc-btn nc-btn-ghost" onClick={downloadDeadlinesIcs}><CalendarPlus size={16} /> Download calendar file</button>
+          <p className="nc-remind-note">Google Calendar: open calendar.google.com → Settings → Import, and choose the file.</p>
+        </div>
+      </section>
+
       <section className="nc-public-section">
         <div className="nc-table-card">
           <table className="nc-table nc-deadline-table">
@@ -84,6 +115,7 @@ export default function DeadlinesPage() {
           <Link to="/signup" className="nc-btn nc-btn-primary nc-btn-lg">Start free trial <ArrowRight size={18} /></Link>
           <Link to="/check" className="nc-btn nc-btn-ghost nc-btn-lg">Which reports do I owe?</Link>
         </div>
+        <p className="nc-hero-note"><FileDown size={14} style={{ verticalAlign: -2 }} /> <a href="/samples/NC-Compliance-sample-submission-pack.pdf" target="_blank" rel="noopener">See a sample submission pack (PDF)</a></p>
       </section>
     </PublicPage>
   );

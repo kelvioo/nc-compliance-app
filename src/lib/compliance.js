@@ -113,6 +113,13 @@ export const STATUTORY_REPORTS = [
 ];
 
 // Next occurrence of "30 days before the first day of the next quarter."
+// The quarter whose report deadline is next: the one a company is preparing now.
+export function upcomingQuarter(from = new Date()) {
+  const quarters = getQuarterOptions();
+  const today = new Date(from); today.setHours(0, 0, 0, 0);
+  return quarters.find((q) => q.deadline >= today) || quarters[0];
+}
+
 export function nextQuarterly30DayDeadline(from) {
   const quarters = getQuarterOptions();
   const upcoming = quarters.find((q) => q.deadline >= from) || quarters[0];

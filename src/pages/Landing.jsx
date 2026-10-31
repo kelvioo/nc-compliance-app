@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import {
-  ArrowRight, CalendarClock, CheckCircle2, ClipboardList, FileText, ShieldCheck, BellRing, History, Send, FolderLock, PackageCheck,
+  ArrowRight, CalendarClock, CheckCircle2, ClipboardList, FileDown, FileText, ShieldCheck, BellRing, History, Send, FolderLock, PackageCheck,
 } from "lucide-react";
 import { useAuth } from "../auth/AuthProvider";
 import { FOUNDING, PLANS, TRIAL_DAYS } from "../lib/plans";
@@ -221,6 +221,20 @@ export default function Landing() {
               <ShieldCheck size={14} /> <span>{r.name}</span> <small>§{r.section}</small>
             </div>
           ))}
+        </div>
+        <div className="nc-sample-box">
+          <div>
+            <h3>See exactly what you'll submit</h3>
+            <p>Download real output from NC Compliance, made for a sample company: no sign-up needed.</p>
+          </div>
+          <div className="nc-sample-links">
+            <a href="/samples/NC-Compliance-sample-submission-pack.pdf" target="_blank" rel="noopener" className="nc-btn nc-btn-primary">
+              <FileDown size={16} /> Sample submission pack (PDF)
+            </a>
+            <a href="/samples/NC-Compliance-sample-job-forecast.pdf" target="_blank" rel="noopener" className="nc-btn nc-btn-ghost">
+              <FileDown size={16} /> Sample Job Forecast (§18)
+            </a>
+          </div>
         </div>
       </section>
 

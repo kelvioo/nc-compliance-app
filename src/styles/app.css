@@ -516,3 +516,25 @@ body { font-family: "IBM Plex Sans", sans-serif; color: var(--nc-text); }
   .nc-countdown { font-size:12.5px; gap:6px; padding:8px 12px; }
   .nc-countdown-link, .nc-countdown svg { display:none; }
 }
+
+/* Sample downloads (home page) */
+.nc-sample-box { display:flex; gap:20px; align-items:center; justify-content:space-between; flex-wrap:wrap; margin-top:28px; padding:22px 24px; border:1px solid rgba(230,162,60,.4); border-radius:12px; background:linear-gradient(135deg, rgba(230,162,60,.10), rgba(230,162,60,.03)); }
+.nc-sample-box h3 { margin:0 0 6px; font:500 22px/1.2 Oswald,sans-serif; letter-spacing:.4px; }
+.nc-sample-box p { margin:0; color:var(--nc-muted); font-size:14px; }
+.nc-sample-links { display:flex; gap:10px; flex-wrap:wrap; }
+
+/* Deadline reminders (deadlines page) */
+.nc-remind { display:grid; grid-template-columns:3fr 2fr; gap:16px; }
+.nc-remind-card { border:1px solid var(--nc-line); background:var(--nc-card); border-radius:12px; padding:20px 22px; }
+.nc-remind-card h2 { display:flex; align-items:center; gap:8px; margin:0 0 12px; font:500 20px/1.2 Oswald,sans-serif; letter-spacing:.4px; }
+.nc-remind-card h2 svg { color:var(--nc-amber); }
+.nc-remind-card > p { color:var(--nc-muted); font-size:14px; line-height:1.5; margin:0 0 14px; }
+.nc-remind-form { display:flex; flex-wrap:wrap; gap:10px; }
+.nc-remind-form input { flex:1 1 180px; min-width:0; background:var(--nc-bg-deep); border:1px solid var(--nc-line); color:var(--nc-text); border-radius:8px; padding:11px 12px; font:inherit; font-size:14px; }
+.nc-remind-form .nc-btn { flex:none; }
+.nc-remind-note { flex-basis:100%; color:var(--nc-faint); font-size:12.5px; margin:4px 0 0; line-height:1.5; }
+.nc-remind-note a { color:var(--nc-amber); }
+.nc-remind-error { flex-basis:100%; color:var(--nc-red); font-size:13px; margin:0; }
+.nc-remind-done { display:flex; gap:10px; align-items:flex-start; color:var(--nc-text); font-size:14px; line-height:1.5; margin:0; }
+.nc-remind-done svg { color:var(--nc-green); flex:none; margin-top:2px; }
+@media (max-width: 760px) { .nc-remind { grid-template-columns:1fr; } }

@@ -40,6 +40,7 @@ function Privacy() {
       <ul>
         <li><strong>Account details:</strong> your name, work email address and your role in your company's workspace.</li>
         <li><strong>Compliance check:</strong> if you use the free compliance check on our website and choose to send us your details, we keep your name, company, email, phone number (if given) and your answers, so we can follow up about your results.</li>
+        <li><strong>Deadline reminders:</strong> if you sign up for free NCDMB deadline reminders, we keep your email address and company name (if given) so we can email you before each deadline.</li>
         <li><strong>Company details:</strong> company name, type (operator or contractor), NCEC or registration numbers and the billing email you give us.</li>
         <li><strong>Workspace content:</strong> the data, reports and documents your team enters or uploads. This can include names and job titles of staff, such as expatriate positions or Nigerian understudies.</li>
         <li><strong>Payment records:</strong> plan, amount, date and Paystack reference. Paystack handles your card details; we never see or store your card number.</li>
@@ -53,6 +54,7 @@ function Privacy() {
         <li><strong>To take payments and keep financial records.</strong> Basis: contract and legal obligation.</li>
         <li><strong>To keep the service secure,</strong> prevent misuse and fix problems. Basis: our legitimate interests.</li>
         <li><strong>To follow up on a compliance check you asked us about.</strong> Basis: your consent, which you can withdraw at any time by emailing us.</li>
+        <li><strong>To send the NCDMB deadline reminders you signed up for.</strong> Basis: your consent, which you can withdraw at any time with the unsubscribe link in every email.</li>
         <li><strong>To answer your questions</strong> and tell you about important changes. Basis: contract and legitimate interests.</li>
       </ul>
       <p>We do not sell personal data, and we do not use it for advertising.</p>

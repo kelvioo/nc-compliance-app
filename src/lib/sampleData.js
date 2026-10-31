@@ -1,7 +1,7 @@
 // A realistic, fictional company used by the public demo (/demo). Dates are
 // generated relative to today so the demo always shows current quarters,
 // upcoming deadlines and recent activity.
-import { blankNCPlan, getQuarterOptions } from "./compliance";
+import { blankNCPlan, getQuarterOptions, upcomingQuarter } from "./compliance";
 import { REPORTS, currentPeriod } from "./reports";
 
 const day = 86400000;
@@ -30,7 +30,10 @@ const entry = (daysAgo, category, vendor, amount, project, note = "") => ({
 });
 
 export function sampleData() {
-  const [q1, q2] = getQuarterOptions();
+  // The quarter being prepared now (next deadline) and the one after it.
+  const quarters = getQuarterOptions();
+  const q1 = upcomingQuarter();
+  const q2 = quarters[quarters.findIndex((q) => q.id === q1.id) + 1] || q1;
   return {
     name: DEMO_ORG.name,
     target: 70,
@@ -77,6 +80,12 @@ export function sampleData() {
       contract(q2.id, "Pipeline pre-commissioning", "Topline Oilfield Services", "Subcontract", "Services", 1_350_000, "Planned / to be bid", "Nigerian"),
       contract(q2.id, "Valves and actuators", "Emerson (via Nigerian agent)", "Purchase order", "Materials", 460_000, "Planned / to be bid", "Foreign"),
       contract(q2.id, "HSE training — BOSIET / HUET", "Petrolog Training Centre", "Subcontract", "Services", 120_000, "Planned / to be bid", "Nigerian"),
+      // Already awarded in the current quarter, so this year's annual report has contracts too.
+      ...(quarters[0].id !== q1.id ? [
+        contract(quarters[0].id, "Wellhead maintenance services", "Dorman Long Engineering", "Contract", "Services", 1_900_000, "Awarded", "Nigerian"),
+        contract(quarters[0].id, "Fabricated pipe spools", "Nestoil Fabrication Yard", "Purchase order", "Materials", 740_000, "Awarded", "Nigerian"),
+        contract(quarters[0].id, "Subsea control module", "Schlumberger Oilfield UK", "Purchase order", "Materials", 3_400_000, "Awarded", "Foreign"),
+      ] : []),
     ],
     marineServices: [
       {
