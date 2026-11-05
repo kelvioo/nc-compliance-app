@@ -1,8 +1,9 @@
 import { useMemo, useState } from "react";
 import { Link } from "react-router-dom";
-import { Search, Mail } from "lucide-react";
+import { Search, Mail, FileDown, PlayCircle } from "lucide-react";
 import { Brand } from "../components/ui";
-import { LINKEDIN_URL, SUPPORT_EMAIL } from "../lib/config";
+import { LINKEDIN_URL, SUPPORT_EMAIL, TUTORIAL_URL, TUTORIAL_VIDEO_ID, USER_GUIDE_PDF } from "../lib/config";
+import { YouTubeVideo } from "../components/YouTubeVideo";
 import { TRIAL_DAYS } from "../lib/plans";
 import { usePageMeta } from "../lib/usePageMeta";
 import { LegalFooter, LinkedInIcon } from "./LegalPage";
@@ -151,6 +152,17 @@ export default function HelpPage() {
       <main className="nc-help-body">
         <h1>Help centre</h1>
         <p className="nc-help-sub">Short guides for everything in NC Compliance.</p>
+        {!query && (
+          <section id="tutorial" className="nc-help-start">
+            <h2><PlayCircle size={20} /> Start here: the full tutorial</h2>
+            <p>Everything from sign-up to your NCDMB submission, step by step, in about 6 minutes. Each chapter is marked on YouTube so you can jump to the part you need.</p>
+            <YouTubeVideo id={TUTORIAL_VIDEO_ID} poster="/tutorial-poster.jpg" title="How to use NC Compliance: sign-up to NCDMB submission" />
+            <div className="nc-help-start-links">
+              <a className="nc-btn nc-btn-primary" href={USER_GUIDE_PDF} target="_blank" rel="noopener"><FileDown size={16} /> Download the user guide (PDF)</a>
+              <a className="nc-btn nc-btn-ghost" href={TUTORIAL_URL} target="_blank" rel="noopener"><PlayCircle size={16} /> Watch on YouTube</a>
+            </div>
+          </section>
+        )}
         <label className="nc-help-search">
           <Search size={16} />
           <input type="search" placeholder="Search, e.g. download PDF, approval, trial" value={query} onChange={(e) => setQuery(e.target.value)} />

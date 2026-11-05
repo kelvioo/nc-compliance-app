@@ -11,3 +11,7 @@ export const LINKEDIN_URL = "https://www.linkedin.com/company/nc-compliance";
 export const YOUTUBE_URL = "https://www.youtube.com/@nccompliance";
 // The "Field to office" promo shown on the home page.
 export const PROMO_VIDEO_ID = "TWSa5aBBTcU";
+// The full "sign-up to NCDMB submission" tutorial (Help page and home page).
+export const TUTORIAL_VIDEO_ID = "T4TB0TALQiI";
+export const TUTORIAL_URL = "https://youtu.be/T4TB0TALQiI";
+export const USER_GUIDE_PDF = "/NC-Compliance-User-Guide.pdf";

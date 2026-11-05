@@ -538,3 +538,13 @@ body { font-family: "IBM Plex Sans", sans-serif; color: var(--nc-text); }
 .nc-remind-done { display:flex; gap:10px; align-items:flex-start; color:var(--nc-text); font-size:14px; line-height:1.5; margin:0; }
 .nc-remind-done svg { color:var(--nc-green); flex:none; margin-top:2px; }
 @media (max-width: 760px) { .nc-remind { grid-template-columns:1fr; } }
+
+/* Help page: tutorial and user guide */
+.nc-help-start { border:1px solid rgba(230,162,60,.4); background:linear-gradient(135deg, rgba(230,162,60,.08), rgba(230,162,60,.02)); border-radius:14px; padding:22px 24px; margin:20px 0 28px; }
+.nc-help-start h2 { display:flex; align-items:center; gap:8px; margin:0 0 6px; font:500 22px/1.2 Oswald,sans-serif; letter-spacing:.4px; }
+.nc-help-start h2 svg { color:var(--nc-amber); }
+.nc-help-start p { color:var(--nc-muted); margin:0; font-size:14.5px; line-height:1.55; }
+.nc-help-start .nc-promo-video { margin:18px 0 0; max-width:none; }
+.nc-help-start-links { display:flex; gap:10px; flex-wrap:wrap; margin-top:16px; }
+.nc-tutorial-link { text-align:center; color:var(--nc-muted); font-size:14px; margin:14px 0 0; }
+.nc-tutorial-link a { color:var(--nc-amber); }

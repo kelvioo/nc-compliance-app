@@ -220,7 +220,7 @@ Deno.serve(async (req) => {
               <li><strong>Log your spend</strong> in the Spend log: Nigerian and foreign labour, equipment and services.</li>
               <li><strong>Invite a colleague</strong> as reviewer or approver, so reports get signed off before they go to NCDMB.</li>
             </ol>
-            <p style="line-height:1.6">Step-by-step guides for every report are in the <a href="${help}" style="color:#b97a1c">help centre</a>.</p>`,
+            <p style="line-height:1.6">New to NC Compliance? Watch the <a href="https://youtu.be/T4TB0TALQiI" style="color:#b97a1c">6-minute tutorial</a> or download the <a href="${APP_URL}/NC-Compliance-User-Guide.pdf" style="color:#b97a1c">user guide (PDF)</a>. Step-by-step guides for every report are in the <a href="${help}" style="color:#b97a1c">help centre</a>.</p>`,
           cta: { label: "Open my workspace", url: `${APP_URL}/app/home` },
         };
       } else if (age >= 3 && age <= 6 && (entryCount.get(org.id) ?? 0) === 0) {
